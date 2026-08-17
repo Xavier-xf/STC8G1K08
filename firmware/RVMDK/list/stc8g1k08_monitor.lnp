@@ -1,0 +1,3 @@
+".\list\Monitor.obj" 
+TO ".\list\stc8g1k08_monitor" 
+PRINT(".\list\stc8g1k08_monitor.m51") RAMSIZE(256) 

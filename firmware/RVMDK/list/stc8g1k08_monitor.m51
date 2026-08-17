@@ -1,0 +1,503 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        08/17/2026  17:03:01  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+C:\KEIL_V5\C51\BIN\BL51.EXE .\list\Monitor.obj TO .\list\stc8g1k08_monitor PRINT (.\list\stc8g1k08_monitor.m51) RAMSIZE 
+>> (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\list\Monitor.obj (MONITOR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C_STARTUP)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?COPY)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CLDPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULDIV)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULCMP)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULSHR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTIDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTXDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTPDATA)
+
+
+LINK MAP OF MODULE:  .\list\stc8g1k08_monitor (MONITOR)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0028H     UNIT         _DATA_GROUP_
+            DATA    0030H     0011H     UNIT         ?DT?MONITOR
+            IDATA   0041H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0008H     UNIT         ?PR?_UART1_PUTC?MONITOR
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     003BH     UNIT         ?PR?UART1_INIT?MONITOR
+                    0049H     000AH                  *** GAP ***
+            CODE    0053H     0003H     ABSOLUTE     
+            CODE    0056H     023FH     UNIT         ?C?LIB_CODE
+            CODE    0295H     00E6H     UNIT         ?CO?MONITOR
+            CODE    037BH     00B0H     UNIT         ?PR?REPORT_STATUS?MONITOR
+            CODE    042BH     008CH     UNIT         ?PR?MAIN?MONITOR
+            CODE    04B7H     0089H     UNIT         ?PR?_UART1_PUT_U32?MONITOR
+            CODE    0540H     0049H     UNIT         ?PR?INT2_ISR?MONITOR
+            CODE    0589H     003BH     UNIT         ?PR?TIMER0_ISR?MONITOR
+            CODE    05C4H     0039H     UNIT         ?PR?_HEARTBEAT_SNAPSHOT?MONITOR
+            CODE    05FDH     0025H     UNIT         ?PR?_UART1_PUTS?MONITOR
+            CODE    0622H     001BH     UNIT         ?PR?MILLIS_SNAPSHOT?MONITOR
+            CODE    063DH     0019H     UNIT         ?PR?GPIO_MONITOR_INIT?MONITOR
+            CODE    0656H     0019H     UNIT         ?PR?_HEARTBEAT_STATUS_NAME?MONITOR
+            CODE    066FH     0013H     UNIT         ?PR?TIMER0_INIT?MONITOR
+            CODE    0682H     000CH     UNIT         ?C_C51STARTUP
+
+
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 2
+
+
+OVERLAY MAP OF MODULE:   .\list\stc8g1k08_monitor (MONITOR)
+
+
+SEGMENT                                      DATA_GROUP 
+  +--> CALLED SEGMENT                      START    LENGTH
+----------------------------------------------------------
+?C_C51STARTUP                              -----    -----
+  +--> ?PR?MAIN?MONITOR
+
+?PR?MAIN?MONITOR                           0008H    0008H
+  +--> ?PR?GPIO_MONITOR_INIT?MONITOR
+  +--> ?PR?UART1_INIT?MONITOR
+  +--> ?PR?TIMER0_INIT?MONITOR
+  +--> ?CO?MONITOR
+  +--> ?PR?_UART1_PUTS?MONITOR
+  +--> ?PR?MILLIS_SNAPSHOT?MONITOR
+  +--> ?PR?REPORT_STATUS?MONITOR
+
+?PR?UART1_INIT?MONITOR                     0010H    0004H
+
+?PR?_UART1_PUTS?MONITOR                    0021H    0003H
+  +--> ?PR?_UART1_PUTC?MONITOR
+
+?PR?MILLIS_SNAPSHOT?MONITOR                0010H    0004H
+
+?PR?REPORT_STATUS?MONITOR                  0010H    0011H
+  +--> ?PR?_HEARTBEAT_SNAPSHOT?MONITOR
+  +--> ?CO?MONITOR
+  +--> ?PR?_UART1_PUTS?MONITOR
+  +--> ?PR?_HEARTBEAT_STATUS_NAME?MONITOR
+  +--> ?PR?_UART1_PUT_U32?MONITOR
+  +--> ?PR?_UART1_PUTC?MONITOR
+
+?PR?_HEARTBEAT_SNAPSHOT?MONITOR            0021H    0007H
+
+?PR?_HEARTBEAT_STATUS_NAME?MONITOR         -----    -----
+  +--> ?CO?MONITOR
+
+?PR?_UART1_PUT_U32?MONITOR                 0021H    000FH
+  +--> ?PR?_UART1_PUTC?MONITOR
+
+
+
+UNRESOLVED EXTERNAL SYMBOLS:
+   ?_HEARTBEAT_MONITOR_STATUS?BYTE
+   _HEARTBEAT_MONITOR_EDGE_AGE_MS
+   _HEARTBEAT_MONITOR_EDGE_COUNT
+   _HEARTBEAT_MONITOR_INIT
+   _HEARTBEAT_MONITOR_ON_FALLING_EDGE
+   _HEARTBEAT_MONITOR_STATUS
+
+
+
+SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_monitor (MONITOR)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 3
+
+
+
+  -------         MODULE        MONITOR
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:00B2H         PUBLIC        P3M0
+  D:00B1H         PUBLIC        P3M1
+  D:00CAH         PUBLIC        P5M0
+  D:00B0H         PUBLIC        P3
+  D:00C9H         PUBLIC        P5M1
+  C:0589H         PUBLIC        timer0_isr
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  C:000EH         SYMBOL        uart1_init
+  D:00A2H         PUBLIC        P_SW1
+  C:05C4H         SYMBOL        _heartbeat_snapshot
+  D:00A8H         PUBLIC        IE
+  C:0003H         SYMBOL        _uart1_putc
+  B:00C8H.5       PUBLIC        AP_RESET_TEST
+  B:0098H.1       PUBLIC        TI
+  C:05FDH         SYMBOL        _uart1_puts
+  C:042BH         PUBLIC        main
+  C:037BH         SYMBOL        report_status
+  B:00C8H.4       PUBLIC        CPU_CHECK
+  C:0540H         PUBLIC        int2_isr
+  D:0099H         PUBLIC        SBUF
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  C:063DH         SYMBOL        gpio_monitor_init
+  D:008EH         PUBLIC        AUXR
+  C:0656H         SYMBOL        _heartbeat_status_name
+  B:00A8H.1       PUBLIC        ET0
+  B:00A8H.3       PUBLIC        ET1
+  B:0088H.5       PUBLIC        TF0
+  D:008CH         PUBLIC        TH0
+  D:008DH         PUBLIC        TH1
+  D:008AH         PUBLIC        TL0
+  D:008BH         PUBLIC        TL1
+  B:0088H.4       PUBLIC        TR0
+  B:0088H.6       PUBLIC        TR1
+  D:0030H         SYMBOL        g_millisecond
+  C:0622H         SYMBOL        millis_snapshot
+  C:04B7H         SYMBOL        _uart1_put_u32
+  C:066FH         SYMBOL        timer0_init
+  D:0034H         SYMBOL        g_heartbeat_monitor
+  D:008FH         PUBLIC        INT_CLKO
+  -------         PROC          TIMER0_INIT
+  C:066FH         LINE#         14
+  C:066FH         LINE#         15
+  C:066FH         LINE#         16
+  C:0672H         LINE#         17
+  C:0675H         LINE#         18
+  C:0678H         LINE#         19
+  C:067BH         LINE#         20
+  C:067DH         LINE#         21
+  C:067FH         LINE#         22
+  C:0681H         LINE#         23
+  -------         ENDPROC       TIMER0_INIT
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 4
+
+
+  -------         PROC          UART1_INIT
+  -------         DO            
+  D:0010H         SYMBOL        reload
+  -------         ENDDO         
+  C:000EH         LINE#         25
+  C:000EH         LINE#         26
+  C:000EH         LINE#         29
+  C:0011H         LINE#         30
+  C:0014H         LINE#         31
+  C:0016H         LINE#         32
+  C:0021H         LINE#         34
+  C:0023H         LINE#         35
+  C:0026H         LINE#         36
+  C:0029H         LINE#         37
+  C:002CH         LINE#         38
+  C:002FH         LINE#         39
+  C:003EH         LINE#         40
+  C:0041H         LINE#         41
+  C:0043H         LINE#         42
+  C:0046H         LINE#         43
+  C:0048H         LINE#         44
+  -------         ENDPROC       UART1_INIT
+  -------         PROC          GPIO_MONITOR_INIT
+  C:063DH         LINE#         46
+  C:063DH         LINE#         47
+  C:063DH         LINE#         49
+  C:0640H         LINE#         50
+  C:0643H         LINE#         51
+  C:0646H         LINE#         53
+  C:0649H         LINE#         54
+  C:064CH         LINE#         55
+  C:064FH         LINE#         56
+  C:0652H         LINE#         57
+  C:0655H         LINE#         58
+  -------         ENDPROC       GPIO_MONITOR_INIT
+  -------         PROC          _UART1_PUTC
+  D:0007H         SYMBOL        value
+  C:0003H         LINE#         60
+  C:0003H         LINE#         61
+  C:0003H         LINE#         62
+  C:0005H         LINE#         63
+  C:0008H         LINE#         64
+  C:0008H         LINE#         65
+  C:000AH         LINE#         66
+  -------         ENDPROC       _UART1_PUTC
+  -------         PROC          _UART1_PUTS
+  D:0021H         SYMBOL        text
+  C:05FDH         LINE#         68
+  C:0603H         LINE#         69
+  C:0603H         LINE#         70
+  C:060EH         LINE#         71
+  C:061FH         LINE#         72
+  C:0621H         LINE#         73
+  -------         ENDPROC       _UART1_PUTS
+  -------         PROC          _UART1_PUT_U32
+  D:0021H         SYMBOL        value
+  -------         DO            
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 5
+
+
+  D:0025H         SYMBOL        digits
+  D:002FH         SYMBOL        count
+  -------         ENDDO         
+  C:04B7H         LINE#         75
+  C:04BFH         LINE#         76
+  C:04BFH         LINE#         78
+  C:04C2H         LINE#         80
+  C:04D4H         LINE#         81
+  C:04D9H         LINE#         83
+  C:04D9H         LINE#         84
+  C:04F3H         LINE#         85
+  C:0512H         LINE#         86
+  C:052BH         LINE#         87
+  C:052DH         LINE#         88
+  C:0531H         LINE#         89
+  C:053DH         LINE#         90
+  C:053FH         LINE#         91
+  -------         ENDPROC       _UART1_PUT_U32
+  -------         PROC          MILLIS_SNAPSHOT
+  -------         DO            
+  D:0010H         SYMBOL        value
+  D:0003H         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:0622H         LINE#         93
+  C:0622H         LINE#         94
+  C:0622H         LINE#         96
+  C:0626H         LINE#         98
+  C:0628H         LINE#         99
+  C:0638H         LINE#         100
+  C:063CH         LINE#         101
+  C:063CH         LINE#         102
+  -------         ENDPROC       MILLIS_SNAPSHOT
+  -------         PROC          _HEARTBEAT_SNAPSHOT
+  D:0021H         SYMBOL        snapshot
+  D:0024H         SYMBOL        now_ms
+  -------         DO            
+  D:0027H         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:05C4H         LINE#         104
+  C:05CAH         LINE#         106
+  C:05CAH         LINE#         107
+  C:05D0H         LINE#         109
+  C:05D2H         LINE#         110
+  C:05E3H         LINE#         111
+  C:05F6H         LINE#         112
+  C:05FCH         LINE#         113
+  -------         ENDPROC       _HEARTBEAT_SNAPSHOT
+  -------         PROC          _HEARTBEAT_STATUS_NAME
+  D:0007H         SYMBOL        status
+  C:0656H         LINE#         115
+  C:0656H         LINE#         116
+  C:0656H         LINE#         117
+  C:0660H         LINE#         118
+  C:066AH         LINE#         119
+  C:066EH         LINE#         120
+  -------         ENDPROC       _HEARTBEAT_STATUS_NAME
+  -------         PROC          REPORT_STATUS
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 6
+
+
+  -------         DO            
+  D:0010H         SYMBOL        snapshot
+  D:001DH         SYMBOL        now_ms
+  D:0006H         SYMBOL        status
+  -------         ENDDO         
+  C:037BH         LINE#         122
+  C:037BH         LINE#         123
+  C:037BH         LINE#         128
+  C:038DH         LINE#         129
+  C:03B5H         LINE#         132
+  C:03BEH         LINE#         133
+  C:03C6H         LINE#         134
+  C:03CFH         LINE#         135
+  C:03DBH         LINE#         136
+  C:03E4H         LINE#         137
+  C:03F8H         LINE#         138
+  C:0401H         LINE#         139
+  C:040DH         LINE#         140
+  C:0416H         LINE#         141
+  C:0422H         LINE#         142
+  -------         ENDPROC       REPORT_STATUS
+  -------         PROC          TIMER0_ISR
+  C:0589H         LINE#         145
+  C:0598H         LINE#         147
+  C:059BH         LINE#         148
+  C:059EH         LINE#         149
+  C:05B7H         LINE#         150
+  -------         ENDPROC       TIMER0_ISR
+  -------         PROC          INT2_ISR
+  C:0540H         LINE#         152
+  C:055DH         LINE#         154
+  C:056EH         LINE#         155
+  -------         ENDPROC       INT2_ISR
+  -------         PROC          MAIN
+  -------         DO            
+  D:0008H         SYMBOL        last_report
+  -------         DO            
+  D:000CH         SYMBOL        now_ms
+  -------         ENDDO         
+  -------         ENDDO         
+  C:042BH         LINE#         157
+  C:042BH         LINE#         158
+  C:042BH         LINE#         161
+  C:042EH         LINE#         162
+  C:0431H         LINE#         163
+  C:0434H         LINE#         164
+  C:0445H         LINE#         165
+  C:0448H         LINE#         166
+  C:044AH         LINE#         168
+  C:0453H         LINE#         169
+  C:045CH         LINE#         170
+  C:0465H         LINE#         171
+  C:046EH         LINE#         173
+  C:0479H         LINE#         174
+  C:0479H         LINE#         175
+  C:0484H         LINE#         177
+  C:04A6H         LINE#         178
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 7
+
+
+  C:04B2H         LINE#         179
+  C:04B5H         LINE#         180
+  C:04B5H         LINE#         181
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        MONITOR
+
+  -------         MODULE        ?C?COPY
+  C:0126H         PUBLIC        ?C?COPY
+  -------         ENDMOD        ?C?COPY
+
+  -------         MODULE        ?C?CLDPTR
+  C:014CH         PUBLIC        ?C?CLDPTR
+  -------         ENDMOD        ?C?CLDPTR
+
+  -------         MODULE        ?C?ULDIV
+  C:01A1H         PUBLIC        ?C?ULDIV
+  -------         ENDMOD        ?C?ULDIV
+
+  -------         MODULE        ?C?ULCMP
+  C:0233H         PUBLIC        ?C?ULCMP
+  -------         ENDMOD        ?C?ULCMP
+
+  -------         MODULE        ?C?ULSHR
+  C:0244H         PUBLIC        ?C?ULSHR
+  -------         ENDMOD        ?C?ULSHR
+
+  -------         MODULE        ?C?LSTPTR
+  C:0257H         PUBLIC        ?C?LSTPTR
+  -------         ENDMOD        ?C?LSTPTR
+
+  -------         MODULE        ?C?LSTIDATA
+  C:0271H         PUBLIC        ?C?LSTIDATA
+  -------         ENDMOD        ?C?LSTIDATA
+
+  -------         MODULE        ?C?LSTXDATA
+  C:027DH         PUBLIC        ?C?LSTXDATA
+  -------         ENDMOD        ?C?LSTXDATA
+
+  -------         MODULE        ?C?LSTPDATA
+  C:0289H         PUBLIC        ?C?LSTPDATA
+  -------         ENDMOD        ?C?LSTPDATA
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  _HEARTBEAT_MONITOR_ON_FALLING_EDGE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  _HEARTBEAT_MONITOR_EDGE_COUNT
+    MODULE:  .\list\Monitor.obj (MONITOR)
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  _HEARTBEAT_MONITOR_STATUS
+    MODULE:  .\list\Monitor.obj (MONITOR)
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 8
+
+
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  _HEARTBEAT_MONITOR_INIT
+    MODULE:  .\list\Monitor.obj (MONITOR)
+
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  _HEARTBEAT_MONITOR_EDGE_AGE_MS
+    MODULE:  .\list\Monitor.obj (MONITOR)
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 0395H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 0398H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 039BH
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 039DH
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 039FH
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 03A2H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 03A5H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  ?_HEARTBEAT_MONITOR_STATUS?BYTE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 03A7H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  _HEARTBEAT_MONITOR_STATUS
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 03B1H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  _HEARTBEAT_MONITOR_EDGE_COUNT
+    MODULE:  .\list\Monitor.obj (MONITOR)
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/17/2026  17:03:01  PAGE 9
+
+
+    ADDRESS: 03D6H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  _HEARTBEAT_MONITOR_EDGE_AGE_MS
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 03F3H
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  _HEARTBEAT_MONITOR_ON_FALLING_EDGE
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 056CH
+
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  _HEARTBEAT_MONITOR_INIT
+    MODULE:  .\list\Monitor.obj (MONITOR)
+    ADDRESS: 0443H
+
+Program Size: data=66.0 xdata=0 code=1668
+LINK/LOCATE RUN COMPLETE.  19 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,1 @@
+"..\App\src\APP_RTC.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\APP_RTC.lst) TABS (2) OBJECT(.\list\APP_RTC.obj)

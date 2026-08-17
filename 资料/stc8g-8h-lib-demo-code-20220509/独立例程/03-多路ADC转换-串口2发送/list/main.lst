@@ -1,0 +1,161 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:12:30 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "adc.h"
+  15          #include  "gpio.h"
+  16          #include  "delay.h"
+  17          #include  "uart.h"
+  18          
+  19          /*************  功能说明  **************
+  20          
+  21          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8G、STC8H系列芯片可通用参考.
+  22          
+  23          本程序演示多路ADC查询采样，通过串口2发送给上位机，波特率115200,N,8,1。
+  24          
+  25          下载时, 选择时钟 22.1184MHz (可以在配置文件"config.h"中修改).
+  26          
+  27          ******************************************/
+  28          
+  29          
+  30          /*************  本地常量声明  **************/
+  31          
+  32          
+  33          /*************  本地变量声明  **************/
+  34          
+  35          
+  36          /*************  本地函数声明  **************/
+  37          
+  38          
+  39          /*************  外部函数和变量声明 *****************/
+  40          
+  41          
+  42          /******************* IO配置函数 *******************/
+  43          void  GPIO_config(void)
+  44          {
+  45   1        GPIO_InitTypeDef  GPIO_InitStructure;   //结构定义
+  46   1        //AD口设置为输入口
+  47   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;    //指定要初始化的IO, GPIO_Pi
+             -n_0 ~ GPIO_Pin_7
+  48   1        GPIO_InitStructure.Mode = GPIO_HighZ; //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_OU
+             -T_PP
+  49   1        GPIO_Inilize(GPIO_P1,&GPIO_InitStructure);  //初始化
+  50   1      
+  51   1        GPIO_InitStructure.Pin  = GPIO_Pin_6 | GPIO_Pin_7;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+  52   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_O
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:12:30 PAGE 2   
+
+             -UT_PP
+  53   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //初始化
+  54   1      }
+  55          
+  56          /******************* AD配置函数 *******************/
+  57          void  ADC_config(void)
+  58          {
+  59   1        ADC_InitTypeDef   ADC_InitStructure;    //结构定义
+  60   1        ADC_InitStructure.ADC_SMPduty   = 31;   //ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 
+             -10）
+  61   1        ADC_InitStructure.ADC_CsSetup   = 0;    //ADC 通道选择时间控制 0(默认),1
+  62   1        ADC_InitStructure.ADC_CsHold    = 1;    //ADC 通道选择保持时间控制 0,1(默认),2,3
+  63   1        ADC_InitStructure.ADC_Speed     = ADC_SPEED_2X1T;   //设置 ADC 工作时钟频率 ADC_SPEED_2X1T~ADC_SPEED_2X16T
+  64   1        ADC_InitStructure.ADC_Power     = ENABLE;       //ADC功率允许/关闭  ENABLE,DISABLE
+  65   1        ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED;  //ADC结果调整,  ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIF
+             -IED
+  66   1        ADC_InitStructure.ADC_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  67   1        ADC_InitStructure.ADC_Interrupt = DISABLE;      //中断允许  ENABLE,DISABLE
+  68   1        ADC_Inilize(&ADC_InitStructure);          //初始化
+  69   1        ADC_PowerControl(ENABLE);             //单独的ADC电源操作函数, ENABLE或DISABLE
+  70   1      }
+  71          
+  72          /***************  串口初始化函数 *****************/
+  73          void  UART_config(void)
+  74          {
+  75   1        COMx_InitDefine   COMx_InitStructure;         //结构定义
+  76   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,U
+             -ART_9bit_BRTx
+  77   1      //  COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;     //选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BR
+             -T_Timer2, 所以不用选择)
+  78   1        COMx_InitStructure.UART_BaudRate  = 115200ul;     //波特率,     110 ~ 115200
+  79   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //接收允许,   ENABLE或DISABLE
+  80   1        COMx_InitStructure.UART_Interrupt = ENABLE;       //中断允许,   ENABLE或DISABLE
+  81   1        COMx_InitStructure.UART_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priori
+             -ty_2,Priority_3
+  82   1        COMx_InitStructure.UART_P_SW      = UART2_SW_P46_P47; //切换端口,   UART2_SW_P10_P11,UART2_SW_P46_P47
+  83   1        UART_Configuration(UART2, &COMx_InitStructure);   //初始化串口2 USART1,USART2,USART3,USART4
+  84   1      
+  85   1        PrintString2("STC8 AD to UART2 Test Programme!\r\n"); //UART2发送一个字符串
+  86   1      }
+  87          
+  88          /**********************************************/
+  89          void main(void)
+  90          {
+  91   1        u8  i;
+  92   1        u16 j;
+  93   1      
+  94   1        GPIO_config();
+  95   1        UART_config();
+  96   1        ADC_config();
+  97   1        EA = 1;
+  98   1      
+  99   1        while (1)
+ 100   1        {
+ 101   2      
+ 102   2          for(i=0; i<4; i++)
+ 103   2          {
+ 104   3            delay_ms(250);
+ 105   3      
+ 106   3            //Get_ADCResult(i);   //参数0~15,查询方式做一次ADC, 丢弃一次
+ 107   3            j = Get_ADCResult(i); //参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:12:30 PAGE 3   
+
+ 108   3            TX2_write2buff('A');
+ 109   3            TX2_write2buff('D');
+ 110   3            TX2_write2buff(i+'0');
+ 111   3            TX2_write2buff('=');
+ 112   3            TX2_write2buff(j/1000 + '0');
+ 113   3            TX2_write2buff(j%1000/100 + '0');
+ 114   3            TX2_write2buff(j%100/10 + '0');
+ 115   3            TX2_write2buff(j%10 + '0');
+ 116   3            TX2_write2buff(' ');
+ 117   3            TX2_write2buff(' ');
+ 118   3          }
+ 119   2          PrintString2("\r\n");
+ 120   2        }
+ 121   1      }
+ 122          
+ 123          
+ 124          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    303    ----
+   CONSTANT SIZE    =     38    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      25
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

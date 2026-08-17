@@ -1,0 +1,7 @@
+".\list\main.obj",
+".\list\delay.obj",
+".\list\GPIO.obj",
+".\list\UART.obj",
+".\list\Exti.obj" 
+TO ".\list\sleep" 
+PRINT(".\list\sleep.m51") RAMSIZE(256) 

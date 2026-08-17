@@ -1,0 +1,204 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:15:15 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "gpio.h"
+  15          #include  "adc.h"
+  16          #include  "delay.h"
+  17          #include  "uart.h"
+  18          
+  19          /*************  功能说明  **************
+  20          
+  21          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8G、STC8H系列芯片可通用参考.
+  22          
+  23          程序演示多路ADC查询采样，通过串口2发送给上位机，波特率115200,N,8,1。
+  24          
+  25          说明:
+  26              ADC的第15通道是用来测试内部BandGap参考电压的,由于内部BandGap参考电
+  27          压很稳定,不会随芯片的工作电压的改变而变化,所以可以通过测量内部BandGap
+  28          参考电压,然后通过ADC的值便可反推出VCC的电压,从而用户可以实现自己的低
+  29          压检测功能.
+  30              ADC的第15通道的测量方法:通过ADC的第15通道读取当前内部BandGap参考电压值.
+  31              用户实现自己的低压检测功能的实现方法:首先用户需要在VCC很精准的情况下
+  32          (比如5.0V),测量出内部BandGap参考电压的ADC转换值(比如为BGV5),并这个值保存
+  33          到EEPROM中,然后在低压检测的代码中,在实际VCC变化后,所测量出的内部BandGap
+  34          参考电压的ADC转换值(比如为BGVx),通过计算公式: 实际VCC = 5.0V * BGV5 / BGVx,
+  35          即可计算出实际的VCC电压值,需要注意的是,第一步的BGV5的基准测量一定要精确.
+  36          
+  37          标定内部基准Vref, 提供一个稳定的工作电压Vcc, 读内部基准Nref. 
+  38          计算内部基准(10位AD) Vref = Nref * Vcc / 1024.
+  39          计算内部基准(12位AD) Vref = Nref * Vcc / 4096.
+  40          
+  41          测量某个电压, 读ADC值Nx, 则电压 Ux = Vref * Nx / Nref. 一般Vref = 1190mV.
+  42          
+  43          下载时, 选择时钟 22.1184MHz (可以在配置文件"config.h"中修改).
+  44          
+  45          ******************************************/
+  46          
+  47          /*************  本地常量声明  **************/
+  48          
+  49          
+  50          /*************  本地变量声明  **************/
+  51          u16 Nref;
+  52          
+  53          
+  54          /*************  本地函数声明  **************/
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:15:15 PAGE 2   
+
+  55          
+  56          
+  57          /*************  外部函数和变量声明 *****************/
+  58          
+  59          
+  60          /******************* IO配置函数 *******************/
+  61          void  GPIO_config(void)
+  62          {
+  63   1        GPIO_InitTypeDef  GPIO_InitStructure;   //结构定义
+  64   1        //AD口设置为输入口
+  65   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2;   //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pi
+             -n_7
+  66   1        GPIO_InitStructure.Mode = GPIO_HighZ; //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_OU
+             -T_PP
+  67   1        GPIO_Inilize(GPIO_P1,&GPIO_InitStructure);  //初始化
+  68   1      
+  69   1        GPIO_InitStructure.Pin  = GPIO_Pin_6 | GPIO_Pin_7;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+  70   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_O
+             -UT_PP
+  71   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //初始化
+  72   1      }
+  73          
+  74          /******************* AD配置函数 *******************/
+  75          void  ADC_config(void)
+  76          {
+  77   1        ADC_InitTypeDef   ADC_InitStructure;    //结构定义
+  78   1        ADC_InitStructure.ADC_SMPduty   = 31;   //ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 
+             -10）
+  79   1        ADC_InitStructure.ADC_CsSetup   = 0;    //ADC 通道选择时间控制 0(默认),1
+  80   1        ADC_InitStructure.ADC_CsHold    = 1;    //ADC 通道选择保持时间控制 0,1(默认),2,3
+  81   1        ADC_InitStructure.ADC_Speed     = ADC_SPEED_2X1T;   //设置 ADC 工作时钟频率 ADC_SPEED_2X1T~ADC_SPEED_2X16T
+  82   1        ADC_InitStructure.ADC_Power     = ENABLE;       //ADC功率允许/关闭  ENABLE,DISABLE
+  83   1        ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED;  //ADC结果调整,  ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIF
+             -IED
+  84   1        ADC_InitStructure.ADC_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  85   1        ADC_InitStructure.ADC_Interrupt = DISABLE;      //中断允许  ENABLE,DISABLE
+  86   1        ADC_Inilize(&ADC_InitStructure);          //初始化
+  87   1        ADC_PowerControl(ENABLE);             //单独的ADC电源操作函数, ENABLE或DISABLE
+  88   1      }
+  89          
+  90          /***************  串口初始化函数 *****************/
+  91          void  UART_config(void)
+  92          {
+  93   1        COMx_InitDefine   COMx_InitStructure;         //结构定义
+  94   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,U
+             -ART_9bit_BRTx
+  95   1      //  COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;     //选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BR
+             -T_Timer2, 所以不用选择)
+  96   1        COMx_InitStructure.UART_BaudRate  = 115200ul;     //波特率,     110 ~ 115200
+  97   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //接收允许,   ENABLE或DISABLE
+  98   1        COMx_InitStructure.UART_Interrupt = ENABLE;       //中断允许,   ENABLE或DISABLE
+  99   1        COMx_InitStructure.UART_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priori
+             -ty_2,Priority_3
+ 100   1        COMx_InitStructure.UART_P_SW      = UART2_SW_P46_P47; //切换端口,   UART2_SW_P10_P11,UART2_SW_P46_P47
+ 101   1        UART_Configuration(UART2, &COMx_InitStructure);   //初始化串口2 USART1,USART2,USART3,USART4
+ 102   1      
+ 103   1        PrintString2("STC8 AD to UART2 Test Programme!\r\n"); //UART2发送一个字符串
+ 104   1      }
+ 105          
+ 106          /**********************************************/
+ 107          void main(void)
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:15:15 PAGE 3   
+
+ 108          {
+ 109   1        u8  i;
+ 110   1        u16 j;
+ 111   1      
+ 112   1        GPIO_config();
+ 113   1        UART_config();
+ 114   1        ADC_config();
+ 115   1        EA = 1;
+ 116   1      
+ 117   1        while (1)
+ 118   1        {
+ 119   2          for(i=0; i<4; i++)
+ 120   2          {
+ 121   3            delay_ms(250);    //为了让发送的速度慢一点，延时250ms
+ 122   3      
+ 123   3            if(i <3)  //ADC0~ADC2
+ 124   3            {
+ 125   4              j = Get_ADCResult(i); //参数0~14,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+ 126   4              TX2_write2buff('A');
+ 127   4              TX2_write2buff('D');
+ 128   4              TX2_write2buff(i+'0');
+ 129   4            }
+ 130   3            else    //内基准
+ 131   3            {
+ 132   4              j = Get_ADCResult(15);  //读内部基准电压, 读15通道
+ 133   4              Nref = j;
+ 134   4              TX2_write2buff('A');
+ 135   4              TX2_write2buff('D');
+ 136   4              TX2_write2buff('r');
+ 137   4              TX2_write2buff('e');
+ 138   4              TX2_write2buff('f');
+ 139   4            }
+ 140   3            TX2_write2buff('=');
+ 141   3            TX2_write2buff(j/1000 + '0');
+ 142   3            TX2_write2buff(j%1000/100 + '0');
+ 143   3            TX2_write2buff(j%100/10 + '0');
+ 144   3            TX2_write2buff(j%10 + '0');
+ 145   3            TX2_write2buff(' ');
+ 146   3            TX2_write2buff(' ');
+ 147   3      
+ 148   3            TX2_write2buff('V');
+ 149   3            TX2_write2buff('=');
+ 150   3            j = (u32)1190 * (u32)j / Nref;      //Ux = Vref * Nx / Nref. Vref = 1190mV
+ 151   3            TX2_write2buff(j/1000 + '0');
+ 152   3            TX2_write2buff('.');
+ 153   3            TX2_write2buff(j%1000/100 + '0');
+ 154   3            TX2_write2buff(j%100/10 + '0');
+ 155   3            TX2_write2buff(j%10 + '0');
+ 156   3            TX2_write2buff(' ');
+ 157   3            TX2_write2buff(' ');
+ 158   3          }
+ 159   2          PrintString2("\r\n");
+ 160   2          //=====================================================================
+ 161   2        }
+ 162   1      }
+ 163          
+ 164          
+ 165          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    509    ----
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:15:15 PAGE 4   
+
+   CONSTANT SIZE    =     38    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2      25
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

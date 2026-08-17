@@ -1,0 +1,6 @@
+".\list\main.obj",
+".\list\GPIO.obj",
+".\list\I2C.obj",
+".\list\timer.obj" 
+TO ".\list\IIC_RTC" 
+PRINT(".\list\IIC_RTC.m51") RAMSIZE(256) 

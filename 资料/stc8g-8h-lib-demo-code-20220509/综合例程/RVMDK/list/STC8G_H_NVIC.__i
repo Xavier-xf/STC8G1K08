@@ -1,0 +1,1 @@
+"..\Driver\src\STC8G_H_NVIC.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\STC8G_H_NVIC.lst) TABS (2) OBJECT(.\list\STC8G_H_NVIC.obj)

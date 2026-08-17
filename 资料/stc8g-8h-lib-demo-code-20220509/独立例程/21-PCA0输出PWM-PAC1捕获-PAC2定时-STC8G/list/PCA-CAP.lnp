@@ -1,0 +1,7 @@
+".\list\delay.obj",
+".\list\PCA.obj",
+".\list\main.obj",
+".\list\GPIO.obj",
+".\list\UART.obj" 
+TO ".\list\PCA-CAP" 
+PRINT(".\list\PCA-CAP.m51") RAMSIZE(256) 

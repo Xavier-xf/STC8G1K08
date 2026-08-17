@@ -1,0 +1,1 @@
+"..\Driver\isr\STC8G_H_UART_Isr.C" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\STC8G_H_UART_Isr.lst) TABS (2) OBJECT(.\list\STC8G_H_UART_Isr.obj)

@@ -1,0 +1,129 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:17:28 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "gpio.h"
+  15          #include  "UART.h"
+  16          #include  "delay.h"
+  17          
+  18          /*************  功能说明  **************
+  19          
+  20          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8G、STC8H系列芯片可通用参考.
+  21          
+  22          双串口全双工中断方式收发通讯程序。
+  23          
+  24          通过PC向MCU发送数据, MCU收到后通过串口把收到的数据原样返回, 默认波特率：57600,N,8,1.
+  25          
+  26          通过开启 UART.h 头文件里面的 UART1~UART4 定义，启动不同通道的串口通信。
+  27          
+  28          用定时器做波特率发生器，建议使用1T模式(除非低波特率用12T)，并选择可被波特率整除的时钟频率，以提高精度。
+  29          
+  30          下载时, 选择时钟 22.1184MHz (可以在配置文件"config.h"中修改).
+  31          
+  32          ******************************************/
+  33          
+  34          /*************  本地常量声明  **************/
+  35          
+  36          
+  37          /*************  本地变量声明  **************/
+  38          
+  39          
+  40          /*************  本地函数声明  **************/
+  41          
+  42          
+  43          /*************  外部函数和变量声明 *****************/
+  44          
+  45          
+  46          /******************* IO配置函数 *******************/
+  47          void  GPIO_config(void)
+  48          {
+  49   1        GPIO_InitTypeDef  GPIO_InitStructure;   //结构定义
+  50   1      
+  51   1        GPIO_InitStructure.Pin  = GPIO_Pin_6 | GPIO_Pin_7;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+  52   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_O
+             -UT_PP
+  53   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //初始化
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:17:28 PAGE 2   
+
+  54   1      }
+  55          
+  56          /***************  串口初始化函数 *****************/
+  57          void  UART_config(void)
+  58          {
+  59   1        COMx_InitDefine   COMx_InitStructure;         //结构定义
+  60   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,U
+             -ART_9bit_BRTx
+  61   1      //  COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;     //选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BR
+             -T_Timer2, 所以不用选择)
+  62   1        COMx_InitStructure.UART_BaudRate  = 57600ul;      //波特率,     110 ~ 115200
+  63   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //接收允许,   ENABLE或DISABLE
+  64   1        COMx_InitStructure.UART_Interrupt = ENABLE;       //中断允许,   ENABLE或DISABLE
+  65   1        COMx_InitStructure.UART_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priori
+             -ty_2,Priority_3
+  66   1        COMx_InitStructure.UART_P_SW      = UART2_SW_P46_P47; //切换端口,   UART2_SW_P10_P11,UART2_SW_P46_P47
+  67   1        UART_Configuration(UART2, &COMx_InitStructure);   //初始化串口2 UART1,UART2,UART3,UART4
+  68   1      
+  69   1        PrintString2("STC8 UART2 Test Programme!\r\n"); //UART2发送一个字符串
+  70   1      }
+  71          
+  72          /**********************************************/
+  73          void main(void)
+  74          {
+  75   1        u8  i;
+  76   1      
+  77   1        GPIO_config();
+  78   1        UART_config();
+  79   1        EA = 1;
+  80   1      
+  81   1        while (1)
+  82   1        {
+  83   2          delay_ms(1);
+  84   2          if(COM2.RX_TimeOut > 0)   //超时计数
+  85   2          {
+  86   3            if(--COM2.RX_TimeOut == 0)
+  87   3            {
+  88   4              if(COM2.RX_Cnt > 0)
+  89   4              {
+  90   5                for(i=0; i<COM2.RX_Cnt; i++)  TX2_write2buff(RX2_Buffer[i]);  //收到的数据原样返回
+  91   5              }
+  92   4              COM2.RX_Cnt = 0;
+  93   4            }
+  94   3          }
+  95   2        }
+  96   1      }
+  97          
+  98          
+  99          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    135    ----
+   CONSTANT SIZE    =     29    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

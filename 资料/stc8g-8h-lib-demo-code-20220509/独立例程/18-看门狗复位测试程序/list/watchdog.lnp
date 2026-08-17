@@ -1,0 +1,6 @@
+".\list\main.obj",
+".\list\delay.obj",
+".\list\GPIO.obj",
+".\list\WDT.obj" 
+TO ".\list\watchdog" 
+PRINT(".\list\watchdog.m51") RAMSIZE(256) 

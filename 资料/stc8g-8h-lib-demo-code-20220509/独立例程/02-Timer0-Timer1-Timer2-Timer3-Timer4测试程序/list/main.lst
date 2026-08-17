@@ -1,0 +1,163 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              09/18/2021 16:04:30 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* Èç¹ûÒªÔÚ³ÌÐòÖÐÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌÐòÖÐ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌÐò            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "timer.h"
+  15          #include  "GPIO.h"
+  16          
+  17          /*************  ¹¦ÄÜËµÃ÷  **************
+  18          
+  19          ±¾Àý³Ì»ùÓÚSTC8H8K64UÎªÖ÷¿ØÐ¾Æ¬µÄÊµÑéÏä8½øÐÐ±àÐ´²âÊÔ£¬STC8G¡¢STC8HÏµÁÐÐ¾Æ¬¿ÉÍ¨ÓÃ²Î¿¼.
+  20          
+  21          ³ÌÐòÑÝÊ¾5¸ö¶¨Ê±Æ÷µÄÊ¹ÓÃ, ¾ùÊ¹ÓÃ16Î»×Ô¶¯ÖØ×°.
+  22          
+  23          ¶¨Ê±Æ÷0×ö16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÆµÂÊÎª100000HZ£¬ÖÐ¶Ïº¯Êý´ÓP6.7È¡·´Êä³ö50KHZ·½²¨ÐÅºÅ.
+  24          
+  25          ¶¨Ê±Æ÷1×ö16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÆµÂÊÎª10000HZ£¬ÖÐ¶Ïº¯Êý´ÓP6.6È¡·´Êä³ö5KHZ·½²¨ÐÅºÅ.
+  26          
+  27          ¶¨Ê±Æ÷2×ö16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÆµÂÊÎª1000HZ£¬ÖÐ¶Ïº¯Êý´ÓP6.5È¡·´Êä³ö500HZ·½²¨ÐÅºÅ.
+  28          
+  29          ¶¨Ê±Æ÷3×ö16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÆµÂÊÎª100HZ£¬ÖÐ¶Ïº¯Êý´ÓP6.4È¡·´Êä³ö50HZ·½²¨ÐÅºÅ.
+  30          
+  31          ¶¨Ê±Æ÷4×ö16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÆµÂÊÎª50HZ£¬ÖÐ¶Ïº¯Êý´ÓP6.3È¡·´Êä³ö25HZ·½²¨ÐÅºÅ.
+  32          
+  33          ÏÂÔØÊ±, Ñ¡ÔñÊ±ÖÓ 24MHz (¿ÉÒÔÔÚÅäÖÃÎÄ¼þ"config.h"ÖÐÐÞ¸Ä).
+  34          
+  35          ******************************************/
+  36          
+  37          /*************  ±¾µØ³£Á¿ÉùÃ÷  **************/
+  38          
+  39          
+  40          /*************  ±¾µØ±äÁ¿ÉùÃ÷  **************/
+  41          
+  42          
+  43          /*************  ±¾µØº¯ÊýÉùÃ÷  **************/
+  44          
+  45          
+  46          
+  47          /*************  Íâ²¿º¯ÊýºÍ±äÁ¿ÉùÃ÷ *****************/
+  48          
+  49          
+  50          
+  51          /************************ IO¿ÚÅäÖÃ ****************************/
+  52          void  GPIO_config(void)
+  53          {
+  54   1        GPIO_InitTypeDef  GPIO_InitStructure;       //½á¹¹¶¨Òå
+C51 COMPILER V9.59.0.0   MAIN                                                              09/18/2021 16:04:30 PAGE 2   
+
+  55   1        GPIO_InitStructure.Pin  = GPIO_Pin_0;       //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7, »ò²Ù×÷
+  56   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO
+             -_OUT_PP
+  57   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //³õÊ¼»¯
+  58   1      
+  59   1        GPIO_InitStructure.Pin  = GPIO_Pin_All;     //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7, »ò²Ù×÷
+  60   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO
+             -_OUT_PP
+  61   1        GPIO_Inilize(GPIO_P6,&GPIO_InitStructure);  //³õÊ¼»¯
+  62   1      }
+  63          
+  64          /************************ ¶¨Ê±Æ÷ÅäÖÃ ****************************/
+  65          void  Timer_config(void)
+  66          {
+  67   1        TIM_InitTypeDef   TIM_InitStructure;            //½á¹¹¶¨Òå
+  68   1        TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //Ö¸¶¨¹¤×÷Ä£Ê½,   TIM_16BitAutoReload,TIM_16Bit,TI
+             -M_8BitAutoReload,TIM_16BitAutoReloadNoMask
+  69   1        TIM_InitStructure.TIM_Priority    = Priority_0;     //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  70   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE
+  71   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //Ö¸¶¨Ê±ÖÓÔ´,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+  72   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+  73   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 100000UL);   //³õÖµ,
+  74   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+  75   1        Timer_Inilize(Timer0,&TIM_InitStructure);         //³õÊ¼»¯Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+  76   1        
+  77   1        TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //Ö¸¶¨¹¤×÷Ä£Ê½,   TIM_16BitAutoReload,TIM_16Bit,TI
+             -M_8BitAutoReload,TIM_16BitAutoReloadNoMask
+  78   1        TIM_InitStructure.TIM_Priority    = Priority_0;     //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  79   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE
+  80   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //Ö¸¶¨Ê±ÖÓÔ´, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
+  81   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+  82   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 10000);      //³õÖµ,
+  83   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+  84   1        Timer_Inilize(Timer1,&TIM_InitStructure);         //³õÊ¼»¯Timer1    Timer0,Timer1,Timer2,Timer3,Timer4
+  85   1      
+  86   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE. (×¢Òâ: Timer2¹Ì¶¨Îª16Î»×
+             -Ô¶¯ÖØ×°, ÖÐ¶Ï¹Ì¶¨ÎªµÍÓÅÏÈ¼¶)
+  87   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //Ö¸¶¨Ê±ÖÓÔ´,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+  88   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+  89   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 1000);       //³õÖµ
+  90   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+  91   1        Timer_Inilize(Timer2,&TIM_InitStructure);         //³õÊ¼»¯Timer2    Timer0,Timer1,Timer2,Timer3,Timer4
+  92   1      
+  93   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE. (×¢Òâ: Timer2¹Ì¶¨Îª16Î»×
+             -Ô¶¯ÖØ×°, ÖÐ¶Ï¹Ì¶¨ÎªµÍÓÅÏÈ¼¶)
+  94   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_12T;  //Ö¸¶¨Ê±ÖÓÔ´,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+  95   1        TIM_InitStructure.TIM_ClkOut    = ENABLE;         //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+  96   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / (100*12));   //³õÖµ
+  97   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+  98   1        Timer_Inilize(Timer3,&TIM_InitStructure);         //³õÊ¼»¯Timer3    Timer0,Timer1,Timer2,Timer3,Timer4
+  99   1      
+ 100   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE. (×¢Òâ: Timer2¹Ì¶¨Îª16Î»×
+             -Ô¶¯ÖØ×°, ÖÐ¶Ï¹Ì¶¨ÎªµÍÓÅÏÈ¼¶)
+ 101   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_12T;  //Ö¸¶¨Ê±ÖÓÔ´,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+ 102   1        TIM_InitStructure.TIM_ClkOut    = ENABLE;         //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+ 103   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / (50*12));    //³õÖµ
+C51 COMPILER V9.59.0.0   MAIN                                                              09/18/2021 16:04:30 PAGE 3   
+
+ 104   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+ 105   1        Timer_Inilize(Timer4,&TIM_InitStructure);         //³õÊ¼»¯Timer4    Timer0,Timer1,Timer2,Timer3,Timer4
+ 106   1      }
+ 107          
+ 108          
+ 109          /******************** Ö÷º¯Êý**************************/
+ 110          void main(void)
+ 111          {
+ 112   1      
+ 113   1        GPIO_config();
+ 114   1        Timer_config();
+ 115   1        EA = 1;
+ 116   1        P40 = 0;    //´ò¿ªLEDµçÔ´
+ 117   1      
+ 118   1        while (1);
+ 119   1      }
+ 120          
+ 121          
+ 122          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    190    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

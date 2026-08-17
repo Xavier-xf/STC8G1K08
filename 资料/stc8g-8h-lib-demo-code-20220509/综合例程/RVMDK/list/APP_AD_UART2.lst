@@ -1,0 +1,156 @@
+C51 COMPILER V9.59.0.0   APP_AD_UART2                                                      01/04/2022 15:37:47 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE APP_AD_UART2
+OBJECT MODULE PLACED IN .\list\APP_AD_UART2.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\App\src\APP_AD_UART2.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(..\
+                    -Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\APP_AD_UART2.lst) TABS(2) OBJECT(.\list\APP_AD_UART2.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "APP_AD_UART2.h"
+  14          #include  "STC8G_H_GPIO.h"
+  15          #include  "STC8G_H_ADC.h"
+  16          #include  "STC8G_H_UART.h"
+  17          #include  "STC8G_H_NVIC.h"
+  18          
+  19          
+  20          /*************  功能说明  **************
+  21          
+  22          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8G、STC8H系列芯片可通用参考.
+  23          
+  24          本程序演示多路ADC查询采样，通过串口2发送给上位机，波特率115200,N,8,1。
+  25          
+  26          用定时器做波特率发生器，建议使用1T模式(除非低波特率用12T)，并选择可被波特率整除的时钟频率，以提高精度。
+  27          
+  28          下载时, 选择时钟 22.1184MHz (可以在配置文件"config.h"中修改).
+  29          
+  30          ******************************************/
+  31          
+  32          
+  33          //========================================================================
+  34          //                               本地常量声明 
+  35          //========================================================================
+  36          
+  37          
+  38          //========================================================================
+  39          //                               本地变量声明
+  40          //========================================================================
+  41          
+  42          u8 index = 0;
+  43          
+  44          //========================================================================
+  45          //                               本地函数声明
+  46          //========================================================================
+  47          
+  48          
+  49          //========================================================================
+  50          //                            外部函数和变量声明
+  51          //========================================================================
+  52          
+  53          
+  54          //========================================================================
+C51 COMPILER V9.59.0.0   APP_AD_UART2                                                      01/04/2022 15:37:47 PAGE 2   
+
+  55          // 函数: ADtoUART_init
+  56          // 描述: 用户初始化程序.
+  57          // 参数: None.
+  58          // 返回: None.
+  59          // 版本: V1.0, 2020-09-28
+  60          //========================================================================
+  61          void ADtoUART_init(void)
+  62          {
+  63   1        ADC_InitTypeDef   ADC_InitStructure;    //结构定义
+  64   1        COMx_InitDefine   COMx_InitStructure;         //结构定义
+  65   1      
+  66   1        P1_MODE_IN_HIZ(GPIO_Pin_LOW);   //P1.0~P1.3 设置为高阻输入
+  67   1        P4_MODE_IO_PU(GPIO_Pin_6 | GPIO_Pin_7); //P4.6,P4.7 设置为准双向口
+  68   1        
+  69   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,U
+             -ART_9bit_BRTx
+  70   1      //  COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;     //选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BR
+             -T_Timer2, 所以不用选择)
+  71   1        COMx_InitStructure.UART_BaudRate  = 115200ul;     //波特率,     110 ~ 115200
+  72   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //接收允许,   ENABLE或DISABLE
+  73   1        UART_Configuration(UART2, &COMx_InitStructure);   //初始化串口2 USART1,USART2,USART3,USART4
+  74   1        NVIC_UART2_Init(ENABLE,Priority_1);   //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Pri
+             -ority_2,Priority_3
+  75   1      
+  76   1        ADC_InitStructure.ADC_SMPduty   = 31;   //ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 
+             -10）
+  77   1        ADC_InitStructure.ADC_CsSetup   = 0;    //ADC 通道选择时间控制 0(默认),1
+  78   1        ADC_InitStructure.ADC_CsHold    = 1;    //ADC 通道选择保持时间控制 0,1(默认),2,3
+  79   1        ADC_InitStructure.ADC_Speed     = ADC_SPEED_2X1T;   //设置 ADC 工作时钟频率 ADC_SPEED_2X1T~ADC_SPEED_2X16T
+  80   1        ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED;  //ADC结果调整,  ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIF
+             -IED
+  81   1        ADC_Inilize(&ADC_InitStructure);    //初始化
+  82   1        ADC_PowerControl(ENABLE);           //ADC电源开关, ENABLE或DISABLE
+  83   1        NVIC_ADC_Init(DISABLE,Priority_0);    //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Prio
+             -rity_2,Priority_3
+  84   1      }
+  85          
+  86          //========================================================================
+  87          // 函数: Sample_ADtoUART
+  88          // 描述: 用户应用程序.
+  89          // 参数: None.
+  90          // 返回: None.
+  91          // 版本: V1.0, 2020-09-24
+  92          //========================================================================
+  93          void Sample_ADtoUART(void)
+  94          {
+  95   1        u16 j;
+  96   1      
+  97   1        j = Get_ADCResult(index); //参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+  98   1        TX2_write2buff('A');
+  99   1        TX2_write2buff('D');
+ 100   1        TX2_write2buff(index+'0');
+ 101   1        TX2_write2buff('=');
+ 102   1        TX2_write2buff(j/1000 + '0');
+ 103   1        TX2_write2buff(j%1000/100 + '0');
+ 104   1        TX2_write2buff(j%100/10 + '0');
+ 105   1        TX2_write2buff(j%10 + '0');
+ 106   1        TX2_write2buff(' ');
+ 107   1        TX2_write2buff(' ');
+ 108   1      
+ 109   1        index++;
+ 110   1        if(index > 4)
+C51 COMPILER V9.59.0.0   APP_AD_UART2                                                      01/04/2022 15:37:47 PAGE 3   
+
+ 111   1        {
+ 112   2          index = 0;
+ 113   2          PrintString2("\r\n");
+ 114   2        }
+ 115   1      }
+ 116          
+ 117          
+ 118          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    285    ----
+   CONSTANT SIZE    =      3    ----
+   XDATA SIZE       =      1      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

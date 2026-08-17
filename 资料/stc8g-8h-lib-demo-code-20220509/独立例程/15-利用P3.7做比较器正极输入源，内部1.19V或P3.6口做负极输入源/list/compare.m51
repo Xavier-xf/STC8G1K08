@@ -1,0 +1,316 @@
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    08/04/2021  10:58:58  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
+C:\KEIL_V5\C51\BIN\BL51.EXE .\list\compare.obj, .\list\GPIO.obj, .\list\main.obj TO .\list\compare PRINT (.\list\compare
+>> .m51) RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\list\compare.obj (COMPARE)
+  .\list\GPIO.obj (GPIO)
+  .\list\main.obj (MAIN)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C_STARTUP)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CLDPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CLDOPTR)
+
+
+LINK MAP OF MODULE:  .\list\compare (COMPARE)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     000CH     UNIT         _DATA_GROUP_
+            IDATA   0014H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0046H     UNIT         ?C?LIB_CODE
+            CODE    0049H     0026H     UNIT         ?PR?CMP_CONFIG?MAIN
+            CODE    006FH     0021H     UNIT         ?PR?GPIO_CONFIG?MAIN
+            CODE    0090H     0011H     UNIT         ?PR?CMP_INT?COMPARE
+            CODE    00A1H     000AH     UNIT         ?PR?MAIN?MAIN
+            CODE    00ABH     0003H     ABSOLUTE     
+            CODE    00AEH     0277H     UNIT         ?PR?_GPIO_INILIZE?GPIO
+            CODE    0325H     00BEH     UNIT         ?PR?_CMP_INILIZE?COMPARE
+            CODE    03E3H     000CH     UNIT         ?C_C51STARTUP
+
+
+
+OVERLAY MAP OF MODULE:   .\list\compare (COMPARE)
+
+
+SEGMENT                            DATA_GROUP 
+  +--> CALLED SEGMENT            START    LENGTH
+------------------------------------------------
+?C_C51STARTUP                    -----    -----
+  +--> ?PR?MAIN?MAIN
+
+?PR?MAIN?MAIN                    -----    -----
+  +--> ?PR?GPIO_CONFIG?MAIN
+  +--> ?PR?CMP_CONFIG?MAIN
+
+?PR?GPIO_CONFIG?MAIN             0008H    0002H
+  +--> ?PR?_GPIO_INILIZE?GPIO
+
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  08/04/2021  10:58:58  PAGE 2
+
+
+?PR?CMP_CONFIG?MAIN              0008H    000CH
+  +--> ?PR?_CMP_INILIZE?COMPARE
+
+
+
+SYMBOL TABLE OF MODULE:  .\list\compare (COMPARE)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        COMPARE
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  D:00BAH         PUBLIC        P_SW2
+  C:0090H         PUBLIC        CMP_int
+  D:00A8H         PUBLIC        IE
+  D:00B6H         PUBLIC        IP2H
+  D:00B8H         PUBLIC        IP
+  C:0325H         PUBLIC        _CMP_Inilize
+  D:00D8H         PUBLIC        CCON
+  D:00E6H         PUBLIC        CMPCR1
+  D:00E7H         PUBLIC        CMPCR2
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  B:00C0H.7       PUBLIC        P47
+  D:00F0H         PUBLIC        B
+  D:00E0H         PUBLIC        ACC
+  D:00B5H         PUBLIC        IP2
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          _CMP_INILIZE
+  D:0001H         SYMBOL        CMPx
+  C:0325H         LINE#         22
+  C:0325H         LINE#         23
+  C:0325H         LINE#         24
+  C:0328H         LINE#         25
+  C:0332H         LINE#         26
+  C:033CH         LINE#         27
+  C:0349H         LINE#         28
+  C:0356H         LINE#         29
+  C:0363H         LINE#         30
+  C:0370H         LINE#         31
+  C:037DH         LINE#         32
+  C:038AH         LINE#         33
+  C:0395H         LINE#         34
+  C:03A3H         LINE#         35
+  C:03B5H         LINE#         36
+  C:03E2H         LINE#         37
+  -------         ENDPROC       _CMP_INILIZE
+  -------         PROC          CMP_INT
+  C:0090H         LINE#         40
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  08/04/2021  10:58:58  PAGE 3
+
+
+  C:0094H         LINE#         42
+  C:0097H         LINE#         43
+  C:009CH         LINE#         44
+  -------         ENDPROC       CMP_INT
+  -------         ENDMOD        COMPARE
+
+  -------         MODULE        GPIO
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0093H         PUBLIC        P0M1
+  D:0092H         PUBLIC        P1M0
+  D:0096H         PUBLIC        P2M0
+  D:0091H         PUBLIC        P1M1
+  D:0080H         PUBLIC        P0
+  D:00B2H         PUBLIC        P3M0
+  D:0095H         PUBLIC        P2M1
+  D:0090H         PUBLIC        P1
+  D:00B4H         PUBLIC        P4M0
+  D:00B1H         PUBLIC        P3M1
+  D:00A0H         PUBLIC        P2
+  D:00CAH         PUBLIC        P5M0
+  D:00B3H         PUBLIC        P4M1
+  D:00B0H         PUBLIC        P3
+  D:00CCH         PUBLIC        P6M0
+  D:00C9H         PUBLIC        P5M1
+  D:00C0H         PUBLIC        P4
+  D:00E2H         PUBLIC        P7M0
+  D:00CBH         PUBLIC        P6M1
+  D:00C8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  D:00E1H         PUBLIC        P7M1
+  D:00F8H         PUBLIC        P7
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  D:00D8H         PUBLIC        CCON
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  D:00F0H         PUBLIC        B
+  D:00E0H         PUBLIC        ACC
+  C:00AEH         PUBLIC        _GPIO_Inilize
+  D:00D0H         PUBLIC        PSW
+  D:0094H         PUBLIC        P0M0
+  -------         PROC          _GPIO_INILIZE
+  D:0007H         SYMBOL        GPIO
+  D:0001H         SYMBOL        GPIOx
+  C:00AEH         LINE#         28
+  C:00AEH         LINE#         29
+  C:00AEH         LINE#         30
+  C:00BBH         LINE#         31
+  C:00CBH         LINE#         32
+  C:00CEH         LINE#         33
+  C:00CEH         LINE#         34
+  C:00DCH         LINE#         35
+  C:00EEH         LINE#         36
+  C:0100H         LINE#         37
+  C:0112H         LINE#         38
+  C:0112H         LINE#         39
+  C:0117H         LINE#         40
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  08/04/2021  10:58:58  PAGE 4
+
+
+  C:0117H         LINE#         41
+  C:0128H         LINE#         42
+  C:0138H         LINE#         43
+  C:0149H         LINE#         44
+  C:015DH         LINE#         45
+  C:015DH         LINE#         46
+  C:0162H         LINE#         47
+  C:0162H         LINE#         48
+  C:0173H         LINE#         49
+  C:0183H         LINE#         50
+  C:0194H         LINE#         51
+  C:01A8H         LINE#         52
+  C:01A8H         LINE#         53
+  C:01ADH         LINE#         54
+  C:01ADH         LINE#         55
+  C:01BEH         LINE#         56
+  C:01CEH         LINE#         57
+  C:01DFH         LINE#         58
+  C:01F3H         LINE#         59
+  C:01F3H         LINE#         60
+  C:01F8H         LINE#         61
+  C:01F8H         LINE#         62
+  C:0209H         LINE#         63
+  C:0219H         LINE#         64
+  C:022AH         LINE#         65
+  C:023EH         LINE#         66
+  C:023EH         LINE#         67
+  C:0243H         LINE#         68
+  C:0243H         LINE#         69
+  C:0254H         LINE#         70
+  C:0264H         LINE#         71
+  C:0275H         LINE#         72
+  C:0289H         LINE#         73
+  C:0289H         LINE#         74
+  C:028EH         LINE#         75
+  C:028EH         LINE#         76
+  C:029FH         LINE#         77
+  C:02AFH         LINE#         78
+  C:02C0H         LINE#         79
+  C:02D4H         LINE#         80
+  C:02D4H         LINE#         81
+  C:02D9H         LINE#         82
+  C:02D9H         LINE#         83
+  C:02ECH         LINE#         84
+  C:02FDH         LINE#         85
+  C:030EH         LINE#         86
+  C:0322H         LINE#         87
+  C:0322H         LINE#         88
+  C:0324H         LINE#         89
+  -------         ENDPROC       _GPIO_INILIZE
+  -------         ENDMOD        GPIO
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  08/04/2021  10:58:58  PAGE 5
+
+
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  C:006FH         PUBLIC        GPIO_config
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  D:00D8H         PUBLIC        CCON
+  C:00A1H         PUBLIC        main
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  C:0049H         PUBLIC        CMP_config
+  D:00F0H         PUBLIC        B
+  D:00E0H         PUBLIC        ACC
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          CMP_CONFIG
+  -------         DO            
+  D:0008H         SYMBOL        CMP_InitStructure
+  -------         ENDDO         
+  C:0049H         LINE#         44
+  C:0049H         LINE#         45
+  C:0049H         LINE#         47
+  C:004CH         LINE#         48
+  C:004FH         LINE#         49
+  C:0052H         LINE#         50
+  C:0055H         LINE#         51
+  C:0057H         LINE#         52
+  C:0059H         LINE#         53
+  C:005CH         LINE#         54
+  C:005FH         LINE#         55
+  C:0062H         LINE#         56
+  C:0065H         LINE#         57
+  C:0067H         LINE#         58
+  -------         ENDPROC       CMP_CONFIG
+  -------         PROC          GPIO_CONFIG
+  -------         DO            
+  D:0008H         SYMBOL        GPIO_InitStructure
+  -------         ENDDO         
+  C:006FH         LINE#         63
+  C:006FH         LINE#         64
+  C:006FH         LINE#         66
+  C:0072H         LINE#         67
+  C:0075H         LINE#         68
+  C:0080H         LINE#         70
+  C:0083H         LINE#         71
+  C:0086H         LINE#         72
+  -------         ENDPROC       GPIO_CONFIG
+  -------         PROC          MAIN
+  C:00A1H         LINE#         78
+  C:00A1H         LINE#         79
+  C:00A1H         LINE#         80
+  C:00A4H         LINE#         81
+  C:00A7H         LINE#         83
+  C:00A9H         LINE#         84
+  -------         ENDPROC       MAIN
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  08/04/2021  10:58:58  PAGE 6
+
+
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        ?C?CLDPTR
+  C:0003H         PUBLIC        ?C?CLDPTR
+  -------         ENDMOD        ?C?CLDPTR
+
+  -------         MODULE        ?C?CLDOPTR
+  C:001CH         PUBLIC        ?C?CLDOPTR
+  -------         ENDMOD        ?C?CLDOPTR
+
+Program Size: data=21.0 xdata=0 code=1007
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

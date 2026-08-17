@@ -1,0 +1,1 @@
+"..\App\src\APP_EEPROM.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\APP_EEPROM.lst) TABS (2) OBJECT(.\list\APP_EEPROM.obj)

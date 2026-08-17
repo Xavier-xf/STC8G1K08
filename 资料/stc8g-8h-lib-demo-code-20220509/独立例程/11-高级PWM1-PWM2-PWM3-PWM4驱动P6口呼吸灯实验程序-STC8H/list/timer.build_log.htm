@@ -1,0 +1,72 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.11.2.0
+Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: cf cf, cf, LIC=EXTQ1-CYSA8-5GQ7V-PA51I-I1FVN-6VPAP
+ 
+Tool Versions:
+Toolchain:       PK51 Prof. Developers Kit  Version: 9.59.0.0
+Toolchain Path:  C:\Keil_v5\C51\BIN
+C Compiler:      C51.exe V9.59.0.0
+Assembler:       A51.exe V8.2.7.0
+Linker/Locator:  BL51.exe V6.22.2.0
+Library Manager: LIB51.exe V4.30.1.0
+Hex Converter:   OH51.exe V2.7.0.0
+CPU DLL:         S8051.DLL V3.122.0.0
+Dialog DLL:      DP51.DLL V2.66.0.0
+Target DLL:      STCMON51.DLL V1, 0, 10, 0
+Dialog DLL:      TP51.DLL V2.60.0.0
+ 
+<h2>Project:</h2>
+D:\Work\STC8H-SOFTWARE-LIB\例程\11-高级PWM1-PWM2-PWM3-PWM4，驱动P6口呼吸灯实验程序\PWM.uvproj
+Project File Date:  07/15/2020
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling GPIO.c...
+compiling main.c...
+compiling timer.c...
+compiling PWM.C...
+PWM.C(37): warning C280: 'UARTx': unreferenced local variable
+PWM.C(37): warning C280: 'COMx': unreferenced local variable
+PWM.C(39): warning C280: 'i': unreferenced local variable
+PWM.C(40): warning C280: 'j': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART_CONFIG?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART_CONFIGURATION?PWM
+Program Size: data=26.0 xdata=0 code=1816
+creating hex file from ".\list\PWM"...
+".\list\PWM" - 0 Error(s), 6 Warning(s).
+</pre>
+</body>
+</html>
+ undefined identifier
+STC8xxxx.H(1078): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1079): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1080): error C202: 'CCON': undefined identifier
+main.c(109): error C202: 'COMx_InitDefine': undefined identifier
+main.c(109): error C141: syntax error near 'COMx_InitStructure', expected ';'
+main.c(118): error C202: 'UART1': undefined identifier
+main.c(126): error C202: 'UART2': undefined identifier
+compiling timer.c...
+STC8xxxx.H(134): error C141: syntax error near 'sfr', expected ';'
+STC8xxxx.H(1075): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1076): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1077): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1078): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1079): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1080): error C202: 'CCON': undefined identifier
+compiling PWM.C...
+STC8xxxx.H(134): error C141: syntax error near 'sfr', expected ';'
+STC8xxxx.H(1075): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1076): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1077): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1078): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1079): error C202: 'CCON': undefined identifier
+STC8xxxx.H(1080): error C202: 'CCON': undefined identifier
+Target not created.

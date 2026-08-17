@@ -1,0 +1,162 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/01/2022 10:50:28 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "timer.h"
+  15          #include  "GPIO.h"
+  16          #include  "PWM.h"
+  17          
+  18          /*************  功能说明  **************
+  19          
+  20          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8H系列芯片可通用参考.
+  21          
+  22          高级PWM定时器 PWM5,PWM6,PWM7,PWM8 每个通道都可独立实现PWM输出.
+  23          
+  24          4个通道PWM根据需要设置对应输出口，可通过示波器观察输出的信号.
+  25          
+  26          PWM周期和占空比可以自定义设置，最高可达65535.
+  27          
+  28          下载时, 选择时钟 24MHZ (用户可在"config.h"修改频率).
+  29          
+  30          ******************************************/
+  31          
+  32          /*************  本地常量声明  **************/
+  33          
+  34          
+  35          /*************  本地变量声明  **************/
+  36          
+  37          PWMx_Duty PWMB_Duty;
+  38          
+  39          /*************  本地函数声明  **************/
+  40          
+  41          
+  42          
+  43          /*************  外部函数和变量声明 *****************/
+  44          
+  45          
+  46          
+  47          /************************ IO口配置 ****************************/
+  48          void  GPIO_config(void)
+  49          {
+  50   1        GPIO_InitTypeDef  GPIO_InitStructure;       //结构定义
+  51   1      
+  52   1        GPIO_InitStructure.Pin  = GPIO_Pin_All;     //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7, 或操作
+  53   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO
+             -_OUT_PP
+C51 COMPILER V9.59.0.0   MAIN                                                              03/01/2022 10:50:28 PAGE 2   
+
+  54   1        GPIO_Inilize(GPIO_P2,&GPIO_InitStructure);  //初始化
+  55   1      }
+  56          
+  57          /************************ 定时器配置 ****************************/
+  58          void  Timer_config(void)
+  59          {
+  60   1        TIM_InitTypeDef   TIM_InitStructure;            //结构定义
+  61   1        TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,TI
+             -M_8BitAutoReload,TIM_16BitAutoReloadNoMask
+  62   1        TIM_InitStructure.TIM_Priority    = Priority_0;     //指定中断优先级(低到高) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  63   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //中断是否允许,   ENABLE或DISABLE
+  64   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+  65   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //是否输出高速脉冲, ENABLE或DISABLE
+  66   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 1000);   //中断频率, 1000次/秒
+  67   1        TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+  68   1        Timer_Inilize(Timer0,&TIM_InitStructure);         //初始化Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+  69   1      }
+  70          
+  71          /***************  串口初始化函数 *****************/
+  72          void  PWM_config(void)
+  73          {
+  74   1        PWMx_InitDefine   PWMx_InitStructure;
+  75   1        
+  76   1        PWMx_InitStructure.PWM5_Mode    = CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  77   1        PWMx_InitStructure.PWM6_Mode    = CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  78   1        PWMx_InitStructure.PWM7_Mode    = CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  79   1        PWMx_InitStructure.PWM8_Mode    = CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  80   1      
+  81   1        PWMx_InitStructure.PWM5_SetPriority  = Priority_0;      //指定中断优先级(低到高) Priority_0,Priority_1,Prior
+             -ity_2,Priority_3
+  82   1        
+  83   1        PWMx_InitStructure.PWM_Period   = 2047;             //周期时间,   0~65535
+  84   1        PWMx_InitStructure.PWM5_Duty    = PWMB_Duty.PWM5_Duty;  //PWM5占空比时间, 0~Period
+  85   1        PWMx_InitStructure.PWM6_Duty    = PWMB_Duty.PWM6_Duty;  //PWM6占空比时间, 0~Period
+  86   1        PWMx_InitStructure.PWM7_Duty    = PWMB_Duty.PWM7_Duty;  //PWM7占空比时间, 0~Period
+  87   1        PWMx_InitStructure.PWM8_Duty    = PWMB_Duty.PWM8_Duty;  //PWM8占空比时间, 0~Period
+  88   1        PWMx_InitStructure.PWM_DeadTime = 0;                //死区发生器设置, 0~255
+  89   1        
+  90   1        PWMx_InitStructure.PWM_EnoSelect   = ENO5P | ENO6P | ENO7P | ENO8P; //输出通道选择, ENO1P,ENO1N,ENO2P,ENO
+             -2N,ENO3P,ENO3N,ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  91   1        PWMx_InitStructure.PWM_PS_SW       = PWM5_SW_P20| PWM6_SW_P21 | PWM7_SW_P22 | PWM8_SW_P23;  //切换端口,   P
+             -WM5_SW_P20,PWM5_SW_P17,PWM5_SW_P00,PWM5_SW_P74
+  92   1                                                            //            PWM6_SW_P21,PWM6_SW_P54,PWM6_SW_P01,PWM6_SW_P75
+  93   1                                                            //            PWM7_SW_P22,PWM7_SW_P33,PWM7_SW_P02,PWM7_SW_P76
+  94   1                                                            //            PWM8_SW_P23,PWM8_SW_P34,PWM8_SW_P03,PWM8_SW_P77
+  95   1      
+  96   1        PWMx_InitStructure.PWM_CC5Enable   = ENABLE;        //开启PWM5P输入捕获/比较输出,  ENABLE,DISABLE
+  97   1        PWMx_InitStructure.PWM_CC6Enable   = ENABLE;        //开启PWM6P输入捕获/比较输出,  ENABLE,DISABLE
+  98   1        PWMx_InitStructure.PWM_CC7Enable   = ENABLE;        //开启PWM7P输入捕获/比较输出,  ENABLE,DISABLE
+  99   1        PWMx_InitStructure.PWM_CC8Enable   = ENABLE;        //开启PWM8P输入捕获/比较输出,  ENABLE,DISABLE
+ 100   1        
+ 101   1        PWMx_InitStructure.PWM_MainOutEnable= ENABLE;       //主输出使能, ENABLE,DISABLE
+ 102   1        PWMx_InitStructure.PWM_CEN_Enable   = ENABLE;       //使能计数器, ENABLE,DISABLE
+ 103   1        PWM_Configuration(PWMB, &PWMx_InitStructure);       //初始化PWM,  PWMA,PWMB
+ 104   1      }
+ 105          
+C51 COMPILER V9.59.0.0   MAIN                                                              03/01/2022 10:50:28 PAGE 3   
+
+ 106          /******************** 主函数**************************/
+ 107          void main(void)
+ 108          {
+ 109   1        PWMB_Duty.PWM5_Duty = 128;
+ 110   1        PWMB_Duty.PWM6_Duty = 256;
+ 111   1        PWMB_Duty.PWM7_Duty = 512;
+ 112   1        PWMB_Duty.PWM8_Duty = 1024;
+ 113   1        
+ 114   1        GPIO_config();
+ 115   1        Timer_config();
+ 116   1        PWM_config();
+ 117   1        EA = 1;
+ 118   1      
+ 119   1        while (1);
+ 120   1      }
+ 121          
+ 122          
+ 123          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    163    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16      62
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

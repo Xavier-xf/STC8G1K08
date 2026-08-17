@@ -1,0 +1,180 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/28/2022 14:12:54 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* Èç¹ûÒªÔÚ³ÌÐòÖÐÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌÐòÖÐ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌÐò            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "timer.h"
+  15          #include  "GPIO.h"
+  16          #include  "PWM.h"
+  17          
+  18          /*************  ¹¦ÄÜËµÃ÷  **************
+  19          
+  20          ±¾Àý³Ì»ùÓÚSTC8H8K64UÎªÖ÷¿ØÐ¾Æ¬µÄÊµÑéÏä8½øÐÐ±àÐ´²âÊÔ£¬STC8HÏµÁÐÐ¾Æ¬¿ÉÍ¨ÓÃ²Î¿¼.
+  21          
+  22          ¸ß¼¶PWM¶¨Ê±Æ÷ PWM1P/PWM1N,PWM2P/PWM2N,PWM3P/PWM3N,PWM4P/PWM4N Ã¿¸öÍ¨µÀ¶¼¿É¶ÀÁ¢ÊµÏÖPWMÊä³ö£¬»òÕßÁ½Á½»¥²¹¶Ô³
+             -ÆÊä³ö.
+  23          
+  24          8¸öÍ¨µÀPWMÉèÖÃ¶ÔÓ¦P6µÄ8¸ö¶Ë¿Ú.
+  25          
+  26          Í¨¹ýP6¿ÚÉÏÁ¬½ÓµÄ8¸öLEDµÆ£¬ÀûÓÃPWMÊµÏÖºôÎüµÆÐ§¹û.
+  27          
+  28          PWMÖÜÆÚºÍÕ¼¿Õ±È¿ÉÒÔ¸ù¾ÝÐèÒª×ÔÐÐÉèÖÃ£¬×î¸ß¿É´ï65535.
+  29          
+  30          ÏÂÔØÊ±, Ñ¡ÔñÊ±ÖÓ 24MHZ (ÓÃ»§¿ÉÔÚ"config.h"ÐÞ¸ÄÆµÂÊ).
+  31          
+  32          ******************************************/
+  33          
+  34          /*************  ±¾µØ³£Á¿ÉùÃ÷  **************/
+  35          
+  36          
+  37          /*************  ±¾µØ±äÁ¿ÉùÃ÷  **************/
+  38          
+  39          PWMx_Duty PWMA_Duty;
+  40          
+  41          /*************  ±¾µØº¯ÊýÉùÃ÷  **************/
+  42          
+  43          
+  44          
+  45          /*************  Íâ²¿º¯ÊýºÍ±äÁ¿ÉùÃ÷ *****************/
+  46          
+  47          
+  48          
+  49          /************************ IO¿ÚÅäÖÃ ****************************/
+  50          void  GPIO_config(void)
+  51          {
+  52   1        GPIO_InitTypeDef  GPIO_InitStructure;       //½á¹¹¶¨Òå
+  53   1        GPIO_InitStructure.Pin  = GPIO_Pin_0;       //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7, »ò²Ù×÷
+C51 COMPILER V9.59.0.0   MAIN                                                              03/28/2022 14:12:54 PAGE 2   
+
+  54   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO
+             -_OUT_PP
+  55   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //³õÊ¼»¯
+  56   1      
+  57   1        GPIO_InitStructure.Pin  = GPIO_Pin_All;     //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7, »ò²Ù×÷
+  58   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO
+             -_OUT_PP
+  59   1        GPIO_Inilize(GPIO_P6,&GPIO_InitStructure);  //³õÊ¼»¯
+  60   1      }
+  61          
+  62          /************************ ¶¨Ê±Æ÷ÅäÖÃ ****************************/
+  63          void  Timer_config(void)
+  64          {
+  65   1        TIM_InitTypeDef   TIM_InitStructure;            //½á¹¹¶¨Òå
+  66   1        TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //Ö¸¶¨¹¤×÷Ä£Ê½,   TIM_16BitAutoReload,TIM_16Bit,TI
+             -M_8BitAutoReload,TIM_16BitAutoReloadNoMask
+  67   1        TIM_InitStructure.TIM_Priority    = Priority_0;     //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Priority
+             -_2,Priority_3
+  68   1        TIM_InitStructure.TIM_Interrupt = ENABLE;         //ÖÐ¶ÏÊÇ·ñÔÊÐí,   ENABLE»òDISABLE
+  69   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //Ö¸¶¨Ê±ÖÓÔ´,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_E
+             -xt
+  70   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //ÊÇ·ñÊä³ö¸ßËÙÂö³å, ENABLE»òDISABLE
+  71   1        TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 1000);   //ÖÐ¶ÏÆµÂÊ, 1000´Î/Ãë
+  72   1        TIM_InitStructure.TIM_Run       = ENABLE;         //ÊÇ·ñ³õÊ¼»¯ºóÆô¶¯¶¨Ê±Æ÷, ENABLE»òDISABLE
+  73   1        Timer_Inilize(Timer0,&TIM_InitStructure);         //³õÊ¼»¯Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+  74   1      }
+  75          
+  76          /***************  ´®¿Ú³õÊ¼»¯º¯Êý *****************/
+  77          void  PWM_config(void)
+  78          {
+  79   1        PWMx_InitDefine   PWMx_InitStructure;
+  80   1        
+  81   1        PWMx_InitStructure.PWM1_Mode    = CCMRn_PWM_MODE1;  //Ä£Ê½,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  82   1        PWMx_InitStructure.PWM2_Mode    = CCMRn_PWM_MODE1;  //Ä£Ê½,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  83   1        PWMx_InitStructure.PWM3_Mode    = CCMRn_PWM_MODE1;  //Ä£Ê½,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  84   1        PWMx_InitStructure.PWM4_Mode    = CCMRn_PWM_MODE1;  //Ä£Ê½,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  85   1      
+  86   1        PWMx_InitStructure.PWM1_SetPriority  = Priority_0;      //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Prior
+             -ity_2,Priority_3
+  87   1        PWMx_InitStructure.PWM2_SetPriority  = Priority_0;      //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Prior
+             -ity_2,Priority_3
+  88   1        PWMx_InitStructure.PWM3_SetPriority  = Priority_0;      //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Prior
+             -ity_2,Priority_3
+  89   1        PWMx_InitStructure.PWM4_SetPriority  = Priority_0;      //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Prior
+             -ity_2,Priority_3
+  90   1        
+  91   1        PWMx_InitStructure.PWM_Period   = 2047;             //ÖÜÆÚÊ±¼ä,   0~65535
+  92   1        PWMx_InitStructure.PWM1_Duty    = PWMA_Duty.PWM1_Duty;  //PWM1Õ¼¿Õ±ÈÊ±¼ä, 0~Period
+  93   1        PWMx_InitStructure.PWM2_Duty    = PWMA_Duty.PWM2_Duty;  //PWM2Õ¼¿Õ±ÈÊ±¼ä, 0~Period
+  94   1        PWMx_InitStructure.PWM3_Duty    = PWMA_Duty.PWM3_Duty;  //PWM3Õ¼¿Õ±ÈÊ±¼ä, 0~Period
+  95   1        PWMx_InitStructure.PWM4_Duty    = PWMA_Duty.PWM4_Duty;  //PWM4Õ¼¿Õ±ÈÊ±¼ä, 0~Period
+  96   1        PWMx_InitStructure.PWM_DeadTime = 0;                //ËÀÇø·¢ÉúÆ÷ÉèÖÃ, 0~255
+  97   1        
+  98   1        PWMx_InitStructure.PWM_EnoSelect   = ENO1P | ENO1N | ENO2P | ENO2N | ENO3P | ENO3N | ENO4P | ENO4N; //Êä³
+             -öÍ¨µÀÑ¡Ôñ,  ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  99   1        PWMx_InitStructure.PWM_PS_SW       = PWM1_SW_P60_P61| PWM2_SW_P62_P63 | PWM3_SW_P64_P65 | PWM4_SW_P66_P67
+             -;  //ÇÐ»»¶Ë¿Ú,    PWM1_SW_P10_P11,PWM1_SW_P20_P21,PWM1_SW_P60_P61
+ 100   1                                                            //            PWM2_SW_P12_P13,PWM2_SW_P22_P23,PWM2_SW_P62_P63
+C51 COMPILER V9.59.0.0   MAIN                                                              03/28/2022 14:12:54 PAGE 3   
+
+ 101   1                                                            //            PWM3_SW_P14_P15,PWM3_SW_P24_P25,PWM3_SW_P64_P65
+ 102   1                                                            //            PWM4_SW_P16_P17,PWM4_SW_P26_P27,PWM4_SW_P66_P67,PWM4_SW_P34_P33
+ 103   1      
+ 104   1        PWMx_InitStructure.PWM_CC1Enable   = ENABLE;        //¿ªÆôPWM1PÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 105   1        PWMx_InitStructure.PWM_CC1NEnable  = ENABLE;        //¿ªÆôPWM1NÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 106   1        PWMx_InitStructure.PWM_CC2Enable   = ENABLE;        //¿ªÆôPWM2PÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 107   1        PWMx_InitStructure.PWM_CC2NEnable  = ENABLE;        //¿ªÆôPWM2NÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 108   1        PWMx_InitStructure.PWM_CC3Enable   = ENABLE;        //¿ªÆôPWM3PÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 109   1        PWMx_InitStructure.PWM_CC3NEnable  = ENABLE;        //¿ªÆôPWM3NÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 110   1        PWMx_InitStructure.PWM_CC4Enable   = ENABLE;        //¿ªÆôPWM4PÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 111   1        PWMx_InitStructure.PWM_CC4NEnable  = ENABLE;        //¿ªÆôPWM4NÊäÈë²¶»ñ/±È½ÏÊä³ö,  ENABLE,DISABLE
+ 112   1        
+ 113   1        PWMx_InitStructure.PWM_MainOutEnable= ENABLE;       //Ö÷Êä³öÊ¹ÄÜ, ENABLE,DISABLE
+ 114   1        PWMx_InitStructure.PWM_CEN_Enable   = ENABLE;       //Ê¹ÄÜ¼ÆÊýÆ÷, ENABLE,DISABLE
+ 115   1        PWM_Configuration(PWMA, &PWMx_InitStructure);       //³õÊ¼»¯PWM,  PWMA,PWMB
+ 116   1      }
+ 117          
+ 118          /******************** Ö÷º¯Êý**************************/
+ 119          void main(void)
+ 120          {
+ 121   1        PWMA_Duty.PWM1_Duty = 128;
+ 122   1        PWMA_Duty.PWM2_Duty = 256;
+ 123   1        PWMA_Duty.PWM3_Duty = 512;
+ 124   1        PWMA_Duty.PWM4_Duty = 1024;
+ 125   1        
+ 126   1        GPIO_config();
+ 127   1        Timer_config();
+ 128   1        PWM_config();
+ 129   1        EA = 1;
+ 130   1        P40 = 0;    //´ò¿ªLEDµçÔ´
+ 131   1      
+ 132   1        while (1);
+ 133   1      }
+ 134          
+ 135          
+ 136          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    200    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16      62
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

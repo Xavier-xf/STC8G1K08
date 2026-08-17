@@ -1,0 +1,203 @@
+C51 COMPILER V9.59.0.0   APP_PWMB_OUTPUT                                                   01/04/2022 15:37:49 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE APP_PWMB_OUTPUT
+OBJECT MODULE PLACED IN .\list\APP_PWMB_Output.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\App\src\APP_PWMB_Output.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(
+                    -..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\APP_PWMB_Output.lst) TABS(2) OBJECT(.\list\APP_PWMB_Output.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "APP.h"
+  14          #include  "STC8H_PWM.h"
+  15          #include  "STC8G_H_GPIO.h"
+  16          #include  "STC8G_H_NVIC.h"
+  17          
+  18          /*************  功能说明  **************
+  19          
+  20          本例程基于STC8H8K64U为主控芯片的实验箱8进行编写测试，STC8H系列芯片可通用参考.
+  21          
+  22          高级PWM定时器 PWM5,PWM6,PWM7,PWM8 每个通道都可独立实现PWM输出.
+  23          
+  24          4个通道PWM根据需要设置对应输出口，可通过示波器观察输出的信号.
+  25          
+  26          PWM周期和占空比可以自定义设置，最高可达65535.
+  27          
+  28          下载时, 选择时钟 24MHZ (用户可在"config.h"修改频率).
+  29          
+  30          ******************************************/
+  31          
+  32          
+  33          //========================================================================
+  34          //                               本地常量声明 
+  35          //========================================================================
+  36          
+  37          
+  38          //========================================================================
+  39          //                               本地变量声明
+  40          //========================================================================
+  41          
+  42          PWMx_Duty PWMB_Duty;
+  43          bit PWM5_Flag;
+  44          bit PWM6_Flag;
+  45          bit PWM7_Flag;
+  46          bit PWM8_Flag;
+  47          
+  48          //========================================================================
+  49          //                               本地函数声明
+  50          //========================================================================
+  51          
+  52          
+  53          //========================================================================
+  54          //                            外部函数和变量声明
+C51 COMPILER V9.59.0.0   APP_PWMB_OUTPUT                                                   01/04/2022 15:37:49 PAGE 2   
+
+  55          //========================================================================
+  56          
+  57          
+  58          //========================================================================
+  59          // 函数: PWMB_Output_init
+  60          // 描述: 用户初始化程序.
+  61          // 参数: None.
+  62          // 返回: None.
+  63          // 版本: V1.0, 2020-09-28
+  64          //========================================================================
+  65          void PWMB_Output_init(void)
+  66          {
+  67   1        PWMx_InitDefine   PWMx_InitStructure;
+  68   1        
+  69   1        PWMB_Duty.PWM5_Duty = 128;
+  70   1        PWMB_Duty.PWM6_Duty = 256;
+  71   1        PWMB_Duty.PWM7_Duty = 512;
+  72   1        PWMB_Duty.PWM8_Duty = 1024;
+  73   1      
+  74   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INV
+             -ALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  75   1        PWMx_InitStructure.PWM_Duty    = PWMB_Duty.PWM5_Duty; //PWM占空比时间, 0~Period
+  76   1        PWMx_InitStructure.PWM_EnoSelect   = ENO5P;         //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P
+             -,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  77   1        PWM_Configuration(PWM5, &PWMx_InitStructure);       //初始化PWM,  PWMA,PWMB
+  78   1      
+  79   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INV
+             -ALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  80   1        PWMx_InitStructure.PWM_Duty    = PWMB_Duty.PWM6_Duty; //PWM占空比时间, 0~Period
+  81   1        PWMx_InitStructure.PWM_EnoSelect   = ENO6P;         //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P
+             -,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  82   1        PWM_Configuration(PWM6, &PWMx_InitStructure);       //初始化PWM,  PWMA,PWMB
+  83   1      
+  84   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INV
+             -ALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  85   1        PWMx_InitStructure.PWM_Duty    = PWMB_Duty.PWM7_Duty; //PWM占空比时间, 0~Period
+  86   1        PWMx_InitStructure.PWM_EnoSelect   = ENO7P;         //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P
+             -,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  87   1        PWM_Configuration(PWM7, &PWMx_InitStructure);       //初始化PWM,  PWMA,PWMB
+  88   1      
+  89   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INV
+             -ALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+  90   1        PWMx_InitStructure.PWM_Duty    = PWMB_Duty.PWM8_Duty; //PWM占空比时间, 0~Period
+  91   1        PWMx_InitStructure.PWM_EnoSelect   = ENO8P;         //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P
+             -,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+  92   1        PWM_Configuration(PWM8, &PWMx_InitStructure);       //初始化PWM,  PWMA,PWMB
+  93   1      
+  94   1        PWMx_InitStructure.PWM_Period   = 2047;             //周期时间,   0~65535
+  95   1        PWMx_InitStructure.PWM_DeadTime = 0;                //死区发生器设置, 0~255
+  96   1        PWMx_InitStructure.PWM_MainOutEnable= ENABLE;       //主输出使能, ENABLE,DISABLE
+  97   1        PWMx_InitStructure.PWM_CEN_Enable   = ENABLE;       //使能计数器, ENABLE,DISABLE
+  98   1        PWM_Configuration(PWMB, &PWMx_InitStructure);       //初始化PWM通用寄存器,  PWMA,PWMB
+  99   1      
+ 100   1        NVIC_PWM_Init(PWMB,DISABLE,Priority_0);
+ 101   1        P0_MODE_IO_PU(GPIO_Pin_LOW);    //P0.0,P0.1,P0.2,P0.3 设置为准双向口
+ 102   1      }
+ 103          
+ 104          //========================================================================
+ 105          // 函数: Sample_PWMB_Output
+ 106          // 描述: 用户应用程序.
+ 107          // 参数: None.
+ 108          // 返回: None.
+C51 COMPILER V9.59.0.0   APP_PWMB_OUTPUT                                                   01/04/2022 15:37:49 PAGE 3   
+
+ 109          // 版本: V1.0, 2020-09-28
+ 110          //========================================================================
+ 111          void Sample_PWMB_Output(void)
+ 112          {
+ 113   1        if(!PWM5_Flag)
+ 114   1        {
+ 115   2          PWMB_Duty.PWM5_Duty++;
+ 116   2          if(PWMB_Duty.PWM5_Duty >= 2047) PWM5_Flag = 1;
+ 117   2        }
+ 118   1        else
+ 119   1        {
+ 120   2          PWMB_Duty.PWM5_Duty--;
+ 121   2          if(PWMB_Duty.PWM5_Duty <= 0) PWM5_Flag = 0;
+ 122   2        }
+ 123   1      
+ 124   1        if(!PWM6_Flag)
+ 125   1        {
+ 126   2          PWMB_Duty.PWM6_Duty++;
+ 127   2          if(PWMB_Duty.PWM6_Duty >= 2047) PWM6_Flag = 1;
+ 128   2        }
+ 129   1        else
+ 130   1        {
+ 131   2          PWMB_Duty.PWM6_Duty--;
+ 132   2          if(PWMB_Duty.PWM6_Duty <= 0) PWM6_Flag = 0;
+ 133   2        }
+ 134   1      
+ 135   1        if(!PWM7_Flag)
+ 136   1        {
+ 137   2          PWMB_Duty.PWM7_Duty++;
+ 138   2          if(PWMB_Duty.PWM7_Duty >= 2047) PWM7_Flag = 1;
+ 139   2        }
+ 140   1        else
+ 141   1        {
+ 142   2          PWMB_Duty.PWM7_Duty--;
+ 143   2          if(PWMB_Duty.PWM7_Duty <= 0) PWM7_Flag = 0;
+ 144   2        }
+ 145   1      
+ 146   1        if(!PWM8_Flag)
+ 147   1        {
+ 148   2          PWMB_Duty.PWM8_Duty++;
+ 149   2          if(PWMB_Duty.PWM8_Duty >= 2047) PWM8_Flag = 1;
+ 150   2        }
+ 151   1        else
+ 152   1        {
+ 153   2          PWMB_Duty.PWM8_Duty--;
+ 154   2          if(PWMB_Duty.PWM8_Duty <= 0) PWM8_Flag = 0;
+ 155   2        }
+ 156   1        
+ 157   1        UpdatePwm(PWMB, &PWMB_Duty);
+ 158   1      }
+ 159          
+ 160          
+ 161          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    501    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     16       9
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.59.0.0   APP_PWMB_OUTPUT                                                   01/04/2022 15:37:49 PAGE 4   
+
+   BIT SIZE         =      4    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

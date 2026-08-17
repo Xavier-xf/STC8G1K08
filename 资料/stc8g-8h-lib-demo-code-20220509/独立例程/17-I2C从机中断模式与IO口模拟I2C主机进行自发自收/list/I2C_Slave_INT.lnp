@@ -1,0 +1,7 @@
+".\list\main.obj",
+".\list\GPIO.obj",
+".\list\I2C.obj",
+".\list\timer.obj" 
+TO ".\list\I2C_Slave_INT" 
+
+PRINT(".\list\I2C_Slave_INT.map") REMOVEUNUSED 

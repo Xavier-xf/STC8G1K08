@@ -1,0 +1,7 @@
+".\list\delay.obj",
+".\list\spi.obj",
+".\list\main.obj",
+".\list\UART.obj",
+".\list\GPIO.obj" 
+TO ".\list\SPI" 
+PRINT(".\list\SPI.m51") RAMSIZE(256) 

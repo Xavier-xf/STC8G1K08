@@ -1,0 +1,7 @@
+".\list\delay.obj",
+".\list\main.obj",
+".\list\GPIO.obj",
+".\list\PWM15bit.obj" 
+TO ".\list\PWM-15bit" 
+
+PRINT(".\list\PWM-15bit.map") REMOVEUNUSED 

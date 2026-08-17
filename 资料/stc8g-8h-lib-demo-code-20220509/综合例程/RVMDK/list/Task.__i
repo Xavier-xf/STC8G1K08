@@ -1,0 +1,1 @@
+"..\User\Task.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Driver\inc;..\User;..\App\inc) DEBUG PRINT(.\list\Task.lst) TABS (2) OBJECT(.\list\Task.obj)

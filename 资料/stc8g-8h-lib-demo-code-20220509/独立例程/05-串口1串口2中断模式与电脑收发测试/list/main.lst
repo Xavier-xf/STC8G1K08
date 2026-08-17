@@ -1,0 +1,165 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:16:28 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------------*/
+   2          /* --- STC MCU Limited ------------------------------------------------*/
+   3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+   4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+   5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+   6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+   7          /* --- Web: www.STCMCU.com --------------------------------------------*/
+   8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+   9          /* --- QQ:  800003751 -------------------------------------------------*/
+  10          /* Èç¹ûÒªÔÚ³ÌÐòÖÐÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌÐòÖÐ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌÐò            */
+  11          /*---------------------------------------------------------------------*/
+  12          
+  13          #include  "config.h"
+  14          #include  "gpio.h"
+  15          #include  "UART.h"
+  16          #include  "delay.h"
+  17          
+  18          /*************  ¹¦ÄÜËµÃ÷  **************
+  19          
+  20          ±¾Àý³Ì»ùÓÚSTC8H8K64UÎªÖ÷¿ØÐ¾Æ¬µÄÊµÑéÏä8½øÐÐ±àÐ´²âÊÔ£¬STC8G¡¢STC8HÏµÁÐÐ¾Æ¬¿ÉÍ¨ÓÃ²Î¿¼.
+  21          
+  22          Àý³ÌÎªË«´®¿ÚÈ«Ë«¹¤ÖÐ¶Ï·½Ê½ÊÕ·¢Í¨Ñ¶³ÌÐò¡£
+  23          
+  24          Í¨¹ýPCÏòMCU·¢ËÍÊý¾Ý, MCUÊÕµ½ºóÍ¨¹ý´®¿Ú°ÑÊÕµ½µÄÊý¾ÝÔ­Ñù·µ»Ø.
+  25          
+  26          ´®¿Ú1Ä¬ÈÏ²¨ÌØÂÊ£º115200,N,8,1.
+  27          
+  28          ´®¿Ú2Ä¬ÈÏ²¨ÌØÂÊ£º57600,N,8,1.
+  29          
+  30          Í¨¹ý¿ªÆô UART.h Í·ÎÄ¼þÀïÃæµÄ UART1~UART4 ¶¨Òå£¬Æô¶¯²»Í¬Í¨µÀµÄ´®¿ÚÍ¨ÐÅ¡£
+  31          
+  32          ÓÃ¶¨Ê±Æ÷×ö²¨ÌØÂÊ·¢ÉúÆ÷£¬½¨ÒéÊ¹ÓÃ1TÄ£Ê½(³ý·ÇµÍ²¨ÌØÂÊÓÃ12T)£¬²¢Ñ¡Ôñ¿É±»²¨ÌØÂÊÕû³ýµÄÊ±ÖÓÆµÂÊ£¬ÒÔÌá¸ß¾«¶È¡£
+  33          
+  34          ÏÂÔØÊ±, Ñ¡ÔñÊ±ÖÓ 22.1184MHz (¿ÉÒÔÔÚÅäÖÃÎÄ¼þ"config.h"ÖÐÐÞ¸Ä).
+  35          
+  36          ******************************************/
+  37          
+  38          /*************  ±¾µØ³£Á¿ÉùÃ÷  **************/
+  39          
+  40          
+  41          /*************  ±¾µØ±äÁ¿ÉùÃ÷  **************/
+  42          
+  43          
+  44          /*************  ±¾µØº¯ÊýÉùÃ÷  **************/
+  45          
+  46          
+  47          /*************  Íâ²¿º¯ÊýºÍ±äÁ¿ÉùÃ÷ *****************/
+  48          
+  49          
+  50          /******************* IOÅäÖÃº¯Êý *******************/
+  51          void  GPIO_config(void)
+  52          {
+  53   1        GPIO_InitTypeDef  GPIO_InitStructure;   //½á¹¹¶¨Òå
+  54   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1;    //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:16:28 PAGE 2   
+
+  55   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_O
+             -UT_PP
+  56   1        GPIO_Inilize(GPIO_P3,&GPIO_InitStructure);  //³õÊ¼»¯
+  57   1      
+  58   1        GPIO_InitStructure.Pin  = GPIO_Pin_6 | GPIO_Pin_7;    //Ö¸¶¨Òª³õÊ¼»¯µÄIO, GPIO_Pin_0 ~ GPIO_Pin_7
+  59   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //Ö¸¶¨IOµÄÊäÈë»òÊä³ö·½Ê½,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_O
+             -UT_PP
+  60   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //³õÊ¼»¯
+  61   1      }
+  62          
+  63          /***************  ´®¿Ú³õÊ¼»¯º¯Êý *****************/
+  64          void  UART_config(void)
+  65          {
+  66   1        COMx_InitDefine   COMx_InitStructure;         //½á¹¹¶¨Òå
+  67   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //Ä£Ê½,       UART_ShiftRight,UART_8bit_BRTx,UART_9b
+             -it,UART_9bit_BRTx
+  68   1        COMx_InitStructure.UART_BRT_Use   = BRT_Timer1;     //Ñ¡Ôñ²¨ÌØÂÊ·¢ÉúÆ÷,   BRT_Timer1, BRT_Timer2 (×¢Òâ: ´®¿
+             -Ú2¹Ì¶¨Ê¹ÓÃBRT_Timer2)
+  69   1        COMx_InitStructure.UART_BaudRate  = 115200ul;     //²¨ÌØÂÊ, Ò»°ã 110 ~ 115200
+  70   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //½ÓÊÕÔÊÐí,   ENABLE»òDISABLE
+  71   1        COMx_InitStructure.BaudRateDouble = DISABLE;      //²¨ÌØÂÊ¼Ó±¶, ENABLE»òDISABLE
+  72   1        COMx_InitStructure.UART_Interrupt = ENABLE;       //ÖÐ¶ÏÔÊÐí,   ENABLE»òDISABLE
+  73   1        COMx_InitStructure.UART_Priority    = Priority_0;     //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Priori
+             -ty_2,Priority_3
+  74   1        COMx_InitStructure.UART_P_SW      = UART1_SW_P30_P31; //ÇÐ»»¶Ë¿Ú,   UART1_SW_P30_P31,UART1_SW_P36_P37,UAR
+             -T1_SW_P16_P17,UART1_SW_P43_P44
+  75   1        UART_Configuration(UART1, &COMx_InitStructure);   //³õÊ¼»¯´®¿Ú1 UART1,UART2,UART3,UART4
+  76   1      
+  77   1        COMx_InitStructure.UART_Mode      = UART_8bit_BRTx;   //Ä£Ê½,       UART_ShiftRight,UART_8bit_BRTx,UART_9b
+             -it,UART_9bit_BRTx
+  78   1      //  COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;     //Ñ¡Ôñ²¨ÌØÂÊ·¢ÉúÆ÷, BRT_Timer2 (×¢Òâ: ´®¿Ú2¹Ì¶¨Ê¹ÓÃBR
+             -T_Timer2, ËùÒÔ²»ÓÃÑ¡Ôñ)
+  79   1        COMx_InitStructure.UART_BaudRate  = 57600ul;      //²¨ÌØÂÊ,     110 ~ 115200
+  80   1        COMx_InitStructure.UART_RxEnable  = ENABLE;       //½ÓÊÕÔÊÐí,   ENABLE»òDISABLE
+  81   1        COMx_InitStructure.UART_Interrupt = ENABLE;       //ÖÐ¶ÏÔÊÐí,   ENABLE»òDISABLE
+  82   1        COMx_InitStructure.UART_Priority    = Priority_0;     //Ö¸¶¨ÖÐ¶ÏÓÅÏÈ¼¶(µÍµ½¸ß) Priority_0,Priority_1,Priori
+             -ty_2,Priority_3
+  83   1        COMx_InitStructure.UART_P_SW      = UART2_SW_P46_P47; //ÇÐ»»¶Ë¿Ú,   UART2_SW_P10_P11,UART2_SW_P46_P47
+  84   1        UART_Configuration(UART2, &COMx_InitStructure);   //³õÊ¼»¯´®¿Ú2 UART1,UART2,UART3,UART4
+  85   1      
+  86   1        PrintString1("STC8 UART1 Test Programme!\r\n"); //UART1·¢ËÍÒ»¸ö×Ö·û´®
+  87   1        PrintString2("STC8 UART2 Test Programme!\r\n"); //UART2·¢ËÍÒ»¸ö×Ö·û´®
+  88   1      }
+  89          
+  90          /***********************************************/
+  91          void main(void)
+  92          {
+  93   1        u8  i;
+  94   1      
+  95   1        GPIO_config();
+  96   1        UART_config();
+  97   1        EA = 1;
+  98   1      
+  99   1        while (1)
+ 100   1        {
+ 101   2          delay_ms(1);
+ 102   2          if(COM1.RX_TimeOut > 0)   //³¬Ê±¼ÆÊý
+ 103   2          {
+ 104   3            if(--COM1.RX_TimeOut == 0)
+ 105   3            {
+ 106   4              if(COM1.RX_Cnt > 0)
+ 107   4              {
+C51 COMPILER V9.59.0.0   MAIN                                                              11/22/2021 09:16:28 PAGE 3   
+
+ 108   5                for(i=0; i<COM1.RX_Cnt; i++)  TX1_write2buff(RX1_Buffer[i]);  //ÊÕµ½µÄÊý¾ÝÔ­Ñù·µ»Ø
+ 109   5              }
+ 110   4              COM1.RX_Cnt = 0;
+ 111   4            }
+ 112   3          }
+ 113   2          if(COM2.RX_TimeOut > 0)   //³¬Ê±¼ÆÊý
+ 114   2          {
+ 115   3            if(--COM2.RX_TimeOut == 0)
+ 116   3            {
+ 117   4              if(COM2.RX_Cnt > 0)
+ 118   4              {
+ 119   5                for(i=0; i<COM2.RX_Cnt; i++)  TX2_write2buff(RX2_Buffer[i]);  //ÊÕµ½µÄÊý¾ÝÔ­Ñù·µ»Ø
+ 120   5              }
+ 121   4              COM2.RX_Cnt = 0;
+ 122   4            }
+ 123   3          }
+ 124   2        }
+ 125   1      }
+ 126          
+ 127          
+ 128          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    263    ----
+   CONSTANT SIZE    =     58    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

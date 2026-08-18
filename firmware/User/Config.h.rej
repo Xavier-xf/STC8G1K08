@@ -1,9 +1,0 @@
---- STC8G1K08/firmware/User/Config.h
-+++ STC8G1K08/firmware/User/Config.h
-@@ -9,3 +9,6 @@
- #define MAIN_FOSC 24000000UL
- #define UART_BAUDRATE 9600UL
- #define TIMER0_TICK_HZ 1000UL
-+#define HEARTBEAT_MONITOR_GRACE_MS 10000UL
-+#define HEARTBEAT_MONITOR_TIMEOUT_MS 1000UL
-+#define INT2_ENABLE_MASK 0x10

@@ -1,54 +1,58 @@
-# STC8G1K08 冒烟固件
+# STC8G1K08 正式 RESET 固件
 
-本目录是 U14（STC8G1K08 8 脚）第一次上板验证使用的独立 Keil C51 工程。它不是最终外部看门狗固件。
+本目录的正式交付目标是外部复位固件。SMOKE/MONITOR 工程、入口和静态脚本已移到 `validation/`，仅作为历史验证快照。
 
-目录布局沿用 STC 官方综合例程：`User/` 放应用入口和配置，`Driver/inc/` 放芯片寄存器定义，`RVMDK/` 放 Keil 工程和编译输出。
+## 正式工程
 
-## 固件边界
+- Keil 工程：`RVMDK/STC8G1K08-RESET.uvproj`
+- 生产入口：`User/main.c`
+- 逻辑模块：`Driver/src/heartbeat_monitor.c`、`Driver/src/reset_controller.c`
+- 生成文件：`RVMDK/list/stc8g1k08_reset.hex`
 
-- Pin1/P5.4/CPU_CHECK 配置为纯输入高阻，只读取电平。
-- Pin3/P5.5/AP-RESET 配置为纯输入高阻，绝不驱动 Q23。
-- Pin5/P3.0 保留为 ISP/UART 接收脚。
-- Pin6/P3.1 输出 9600 8N1 诊断信息。
-- Timer0 产生 1 ms 计时，用于每秒输出一次状态。
-- 不访问 WDT_CONTR，不启动软件或硬件看门狗。
-- P54RST=0 必须在 STC-ISP 中设置，不能在运行时代码中代替配置。
+本次保留 HEX 输出名，便于现场烧录记录和脚本继续使用。正式工程目录不再包含 SMOKE/MONITOR 工程。
 
-## 为什么不直接使用随附通用例程
+## 固定契约
 
-资料/stc8g-8h-lib-demo-code-20220509/ 是 STC 官方发布的 STC8G/STC8H 通用参考，例程注释明确说明其实际示例以 STC8H8K64U 为基础。其 GPIO 模式和 WDT 寄存器定义可以参考，但 库函数/STC8xxxx.H 中的通用 INT2=P3.6 宏不适用于 STC8G1K08 8 脚；官网 STC8G-cn.pdf 第 20～21 页明确 Pin1/P5.4 才是 INT2。因此本工程使用本地最小寄存器头文件，避免把大封装的中断映射带进 8 脚芯片。
+- P5.4/INT2 只接收 V853 CPU_CHECK 下降沿；INT2 使用芯片固定下降沿配置。
+- P5.5/AP-RESET 正常状态为高阻，只有复位状态驱动 Q23 链路。
+- V853 心跳每 100 ms 翻转一次，完整周期约 200 ms。
+- RESET 超时为 1000 ms，启动宽限为 30000 ms，复位脉冲为 200 ms。
+- STC 内部 WDT 使用 128 分频，24 MHz 下约 2.1 s；主循环持续清 WDT。
+- 启动横幅包含固件版本 `STC8G1K08_FIRMWARE_VERSION "1.0.0"`。
 
-## 编译
+## Keil 构建
 
-1. 使用 Keil C51 打开 `RVMDK/STC8G1K08-SMOKE.uvproj`。
-2. 确认目标器件显示为 **STC8G1K08 Series**；不要选择带 LED/TOUCH 功能的 **STC8G1K08T Series**。
-3. 确认 `RVMDK/list/` 目录存在且可写，再编译生成 `RVMDK/list/stc8g1k08_smoke.hex`。
-4. 本仓库不替你编译，也不包含生成的 HEX；由现场 Keil 环境生成。
+在 Windows Keil C51 中打开 `RVMDK/STC8G1K08-RESET.uvproj`，确认目标器件为 **STC8G1K08 Series**，不要选择 `STC8G1K08T Series`。
 
-如果打开工程时仍显示“未找到设备”，说明项目文件没有被保存或打开的不是这份工程；应关闭 Keil，确认 XML 中是 `<Device>STC8G1K08 Series</Device>` 后重新打开。
-如果出现 `Cannot write project file` 或 `cannot create command input file .\\list\\Main.__i`，先把整个 `firmware` 目录复制到本地可写路径（例如 `C:\\Kocom\\STC8G1K08\\firmware`）再打开工程。网络共享目录需要具备文件创建、修改和删除权限。
+构建前确认 `RVMDK/list/` 可写。验收日志应至少包含：
 
-如果本地 Keil 器件数据库确实没有 `STC8G1K08 Series`，可选择兼容的 MCS-51/STC8G 目标，但不要把通用 STC8xxxx.H 替换进来；正常情况下不应走此兼容路径。
+```text
+compiling main.c...
+compiling heartbeat_monitor.c...
+compiling reset_controller.c...
+0 Error(s), 0 Warning(s)
+```
 
-## 烧录前 ISP 配置
+生成的唯一正式烧录文件为 `RVMDK/list/stc8g1k08_reset.hex`。Linux 环境不能替代 Windows Keil 验收。
 
-详见 isp-config-bringup.txt。至少确认：
+## ISP 配置
 
-- 目标型号为 STC8G1K08 8 脚系列，实际封装以实物/BOM 为准；
-- P54RST=0；
-- IRC/SYSCLK=24 MHz；
-- 硬件 WDT 自动启动关闭；
-- 代码保护关闭；
-- LVD、复位延时和下载接口按现场实际记录。
+烧录前确认 `isp-config-bringup.txt` 中的现场选项仍有效：
 
-## 现场验证顺序
+- STC8G1K08-8PIN，P54RST=0。
+- IRC/SYSCLK=24 MHz。
+- 上电不自动启动硬件 WDT，LVD、复位延时和下载接口按现场记录。
+- 串口诊断使用 P3.1、9600 8N1。
 
-1. 断电检查 VDD_3.3V、GND、P3.0/P3.1 下载线和 USB-UART 地线。
-2. 上电烧录，确认 STC-ISP 报告下载成功。
-3. 连接 P3.1 到 USB-UART 的 RX，9600 8N1，观察启动横幅。
-4. 每次复位后应重新出现横幅；连续运行时每秒出现一行 alive。
-5. 让 V853 改变 CPU_CHECK，观察 P54=0/1 跟随变化。
-6. 用示波器确认 P5.5 和 AP-RESET 没有被本固件主动拉成复位电平。
-7. 至少重复下载/断电启动三次，再记录结果到 验证记录.md。
+## 板上验收
 
-本固件通过后，才能进入 P5.5/Q23 电气链路验证。不要在这个固件阶段人为停止心跳来测试复位，因为本固件尚未实现超时状态机。
+1. 烧录 HEX 并上电，观察 `STC8G1K08 reset firmware v1.0.0` 启动横幅。
+2. 正常运行至少 10 分钟，确认 `healthy/monitoring`、`output=high-z` 且无误复位。
+3. 找到 `/home/application/KCMLobbyPhone` 的实际 PID，分别执行三次 `kill -STOP <PID>`；每次只允许产生一次复位并恢复心跳。
+4. 确认 V853 约 16 s 的启动心跳延迟不会触发误复位，30 s 宽限有效。
+5. 确认恢复后 STC 回到 `healthy/monitoring`，P5.5 回到高阻。
+6. 仅用 `kill -CONT <PID>` 释放仍被暂停的旧进程，不把它作为复位成功判据。
+
+本次现场记录跳过 P5.5/AP-RESET 示波器测量；`AP_RESET_ASSERT_LEVEL=0` 是当前低有效工程假设，后续若实测极性相反只修改该配置宏并重新烧录。
+
+历史快照说明见 `validation/README.md`，原冒烟文档见 `validation/README-smoke.md`。

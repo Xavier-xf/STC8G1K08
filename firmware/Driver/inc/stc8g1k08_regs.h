@@ -43,10 +43,12 @@ sbit TR1 = TCON^6;
 
 /* 中断使能位 */
 sbit ET0 = IE^1;
+sbit ES = IE^4;
 sbit ET1 = IE^3;
 sbit EA = IE^7;
 
 /* UART1 发送完成标志 */
+sbit RI = SCON^0;
 sbit TI = SCON^1;
 
 /*

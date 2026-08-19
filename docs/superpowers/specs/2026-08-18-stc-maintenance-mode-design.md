@@ -23,7 +23,9 @@ The STC retains its internal WDT in every state. Maintenance only gates the hear
 
 - Keep P5.5/AP-RESET high-impedance; release it immediately when entering maintenance even if the reset controller was asserting it.
 - Ignore missing CPU_CHECK edges for AP-RESET purposes.
-- Continue the Timer0 tick, UART command handling, status output, and WDT clearing.
+- Continue the Timer0 tick, UART command handling, and WDT clearing. Do not emit
+  periodic full status lines while running; status is requested explicitly with
+  `MNT STATUS`.
 - Require an active lease. The default lease is 1,800 s; accepted leases are bounded to 60..3,600 s.
 
 `RESUME` is the transition performed by `MNT EXIT` or lease expiry:
@@ -50,7 +52,9 @@ MNT STATUS\r\n
 - `ENTER` switches to maintenance and sets the lease. Omitting seconds uses 1,800 s.
 - `RENEW` is valid only in maintenance and replaces the lease from the current tick.
 - `EXIT` leaves maintenance and starts the normal resume sequence.
-- `STATUS` is read-only and reports `mode`, `lease_ms`, heartbeat/reset state, and WDT state.
+- `STATUS` is read-only and reports `mode`, `lease_ms`, heartbeat/reset state, and WDT state once.
+- The startup banner and command ACK/NACK lines are the only unsolicited protocol
+  output. Normal and maintenance modes do not print a status line every second.
 - Successful commands return an `MNT ACK ...` line. Invalid commands or out-of-range leases return `MNT NACK reason=...`.
 - The command parser is bounded and non-blocking. It must never wait for a complete command in the main loop or ISR.
 
@@ -58,7 +62,13 @@ MNT STATUS\r\n
 
 - Add a small pure `maintenance_controller` module for line parsing, lease arithmetic, and state transitions. It has no SFR or UART calls and is host-testable.
 - Keep SFR initialization, UART transport, Timer0, GPIO, WDT, and the existing heartbeat/reset logic in the current formal project structure. Do not split the old hardware functions as part of this feature.
-- Add UART1 RX support in `main.c` with a bounded receive ring and a serial ISR. TX completion must continue to work while RX bytes are buffered; the existing blocking diagnostic output must not clear a TX completion flag before `uart1_putc()` observes it.
+- Add `Driver/inc/uart.h` and `Driver/src/uart.c` for UART1 initialization,
+  9600 8N1 TX/RX, the bounded receive ring, and the serial ISR. TX completion
+  must continue to work while RX bytes are buffered; the existing blocking
+  diagnostic output must not clear a TX completion flag before `uart1_putc()`
+  observes it.
+- Keep command dispatch and `MNT STATUS` formatting in `User/main.c`; the UART
+  module must not know maintenance semantics.
 - Poll parsed command events from the main loop. Enter/exit side effects occur in main context: update the maintenance controller, release AP-RESET, and reinitialize heartbeat/reset state on resume.
 - Keep `INT2` dedicated to CPU_CHECK falling edges. Do not add a P5.4 command encoding or change its electrical role.
 - Do not modify V853 application code, device-tree files, `/dev/ttyS0`, RF UART, or radar UART in this phase.
@@ -70,7 +80,9 @@ MNT STATUS\r\n
 3. Stop `KCMLobbyPhone`; use `kill -9` only after the ACK if graceful termination is unavailable.
 4. Perform NFS mounting, replacement, or upgrade work.
 5. Start the new application and wait until CPU_CHECK heartbeat output has resumed.
-6. Send `MNT EXIT` and verify `MNT ACK mode=resume` followed by `heartbeat=healthy state=monitoring`.
+6. Send `MNT STATUS` when a full snapshot is needed, then send `MNT EXIT` and
+   verify `MNT ACK mode=resume`. Query `MNT STATUS` again after heartbeat recovery
+   to confirm `heartbeat=healthy state=monitoring`.
 
 If the technician forgets `EXIT`, the lease expires and normal monitoring resumes. If the STC resets, normal monitoring also resumes immediately after boot.
 
@@ -86,7 +98,10 @@ If the technician forgets `EXIT`, the lease expires and normal monitoring resume
 
 - Host tests cover command parsing, lease bounds, renewal, exit, expiry, timestamp wraparound, and reset-to-normal initialization.
 - Keil build must remain `0 Error(s), 0 Warning(s)` and include only the production RESET target plus the new maintenance logic module.
-- Board test with PC USB-UART covers valid/invalid commands, status responses, no AP-RESET during a maintenance lease while V853 is stopped, lease expiry, STC reset during maintenance, and successful resume after V853 heartbeat recovery.
+- Board test with PC USB-UART covers valid/invalid commands, explicit status
+  responses, absence of periodic status spam, no AP-RESET during a maintenance
+  lease while V853 is stopped, lease expiry, STC reset during maintenance, and
+  successful resume after V853 heartbeat recovery.
 - Existing normal-mode tests remain unchanged: healthy heartbeat, one reset pulse after timeout, WDT enabled, and P5.5 high-z outside the pulse.
 
 ## Rollback

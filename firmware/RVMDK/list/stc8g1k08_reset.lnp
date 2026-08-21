@@ -1,0 +1,7 @@
+".\list\main.obj",
+".\list\heartbeat_monitor.obj",
+".\list\uart.obj",
+".\list\reset_controller.obj",
+".\list\maintenance_runtime.obj" 
+TO ".\list\stc8g1k08_reset" 
+PRINT(".\list\stc8g1k08_reset.m51") RAMSIZE(256) 

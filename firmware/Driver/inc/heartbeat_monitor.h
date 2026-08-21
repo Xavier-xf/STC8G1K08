@@ -29,8 +29,10 @@ heartbeat_monitor_status_t heartbeat_monitor_status(const heartbeat_monitor_t *m
                                                     heartbeat_monitor_ms_t now_ms,
                                                     heartbeat_monitor_ms_t grace_ms,
                                                     heartbeat_monitor_ms_t timeout_ms);
+#ifdef HEARTBEAT_MONITOR_HOST_TEST
 unsigned long heartbeat_monitor_edge_count(const heartbeat_monitor_t *monitor);
 heartbeat_monitor_ms_t heartbeat_monitor_edge_age_ms(const heartbeat_monitor_t *monitor,
                                                       heartbeat_monitor_ms_t now_ms);
+#endif
 
 #endif

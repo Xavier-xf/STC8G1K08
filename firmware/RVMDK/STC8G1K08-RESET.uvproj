@@ -387,11 +387,6 @@
               <FilePath>..\Driver\src\heartbeat_monitor.c</FilePath>
             </File>
             <File>
-              <FileName>maintenance_controller.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Driver\src\maintenance_controller.c</FilePath>
-            </File>
-            <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Driver\src\uart.c</FilePath>
@@ -400,6 +395,11 @@
               <FileName>reset_controller.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Driver\src\reset_controller.c</FilePath>
+            </File>
+            <File>
+              <FileName>maintenance_runtime.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\src\maintenance_runtime.c</FilePath>
             </File>
           </Files>
         </Group>

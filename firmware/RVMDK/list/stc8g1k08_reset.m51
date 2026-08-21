@@ -1,0 +1,1137 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        08/21/2026  10:55:33  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+C:\KEIL_V5\C51\BIN\BL51.EXE .\list\main.obj, .\list\heartbeat_monitor.obj, .\list\uart.obj, .\list\reset_controller.obj,
+>>  .\list\maintenance_runtime.obj TO .\list\stc8g1k08_reset PRINT (.\list\stc8g1k08_reset.m51) RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\list\main.obj (MAIN)
+  .\list\heartbeat_monitor.obj (HEARTBEAT_MONITOR)
+  .\list\uart.obj (UART)
+  .\list\reset_controller.obj (RESET_CONTROLLER)
+  .\list\maintenance_runtime.obj (MAINTENANCE_RUNTIME)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C_STARTUP)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?COPY)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CLDPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CLDOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CSTPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?CSTOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ILDPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ILDOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ISTPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ISTOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULDIV)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULCMP)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?ULSHR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDOPTR0)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTKOPTR)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDIDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDXDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDPDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDCODE)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDIDATA0)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDXDATA0)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDPDATA0)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LLDCODE0)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTIDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTXDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTPDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTKIDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTKXDATA)
+  C:\KEIL_V5\C51\LIB\C51S.LIB (?C?LSTKPDATA)
+
+
+LINK MAP OF MODULE:  .\list\stc8g1k08_reset (MAIN)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0047H     UNIT         _DATA_GROUP_
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 2
+
+
+            DATA    004FH     0020H     UNIT         ?DT?MAIN
+            IDATA   006FH     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0008H     UNIT         ?PR?_UART1_PUTC?UART
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     0043H     UNIT         ?PR?_MAINTENANCE_RUNTIME_SNAPSHOT?MAIN
+                    0051H     0002H                  *** GAP ***
+            CODE    0053H     0003H     ABSOLUTE     
+            CODE    0056H     04E4H     UNIT         ?C?LIB_CODE
+            CODE    053AH     01C0H     UNIT         ?PR?_MAINTENANCE_RUNTIME_ON_FALLING_EDGE?MAINTENANCE_RUNTIME
+            CODE    06FAH     01A3H     UNIT         ?CO?MAIN
+            CODE    089DH     0198H     UNIT         ?PR?_MAINTENANCE_RUNTIME_POLL?MAINTENANCE_RUNTIME
+            CODE    0A35H     0181H     UNIT         ?PR?APP_RUN?MAIN
+            CODE    0BB6H     010EH     UNIT         ?PR?_APP_REPORT?MAIN
+            CODE    0CC4H     009EH     UNIT         ?PR?_RESET_CONTROLLER_UPDATE?RESET_CONTROLLER
+            CODE    0D62H     0089H     UNIT         ?PR?_UART1_PUT_U32?UART
+            CODE    0DEBH     006BH     UNIT         ?PR?APP_INIT?MAIN
+            CODE    0E56H     0062H     UNIT         ?PR?INT2_ISR?MAIN
+            CODE    0EB8H     0061H     UNIT         ?PR?_HEARTBEAT_MONITOR_STATUS?HEARTBEAT_MONITOR
+            CODE    0F19H     003CH     UNIT         ?PR?_HEARTBEAT_MONITOR_ON_FALLING_EDGE?HEARTBEAT_MONITOR
+            CODE    0F55H     003BH     UNIT         ?PR?TIMER0_ISR?MAIN
+            CODE    0F90H     003BH     UNIT         ?PR?UART1_INIT?UART
+            CODE    0FCBH     0039H     UNIT         ?PR?_HEARTBEAT_SNAPSHOT?MAIN
+            CODE    1004H     0037H     UNIT         ?PR?_APP_RESUME_NORMAL?MAIN
+            CODE    103BH     0037H     UNIT         ?PR?_HEARTBEAT_MONITOR_INIT?HEARTBEAT_MONITOR
+            CODE    1072H     002EH     UNIT         ?PR?_HEARTBEAT_MONITOR_ELAPSED?HEARTBEAT_MONITOR
+            CODE    10A0H     0029H     UNIT         ?PR?_RESET_CONTROLLER_INIT?RESET_CONTROLLER
+            CODE    10C9H     0025H     UNIT         ?PR?_APPLY_RESET_OUTPUT?MAIN
+            CODE    10EEH     0025H     UNIT         ?PR?_UART1_PUTS?UART
+            CODE    1113H     0025H     UNIT         ?PR?_MAINTENANCE_RUNTIME_INIT?MAINTENANCE_RUNTIME
+            CODE    1138H     0024H     UNIT         ?PR?_RESET_CONTROLLER_BEGIN_ASSERT?RESET_CONTROLLER
+            CODE    115CH     0023H     UNIT         ?PR?_RESET_STATE_NAME?MAIN
+            CODE    117FH     001EH     UNIT         ?PR?_RESET_CONTROLLER_ELAPSED?RESET_CONTROLLER
+            CODE    119DH     001CH     UNIT         ?PR?GPIO_RESET_INIT?MAIN
+            CODE    11B9H     001BH     UNIT         ?PR?MILLIS_SNAPSHOT?MAIN
+            CODE    11D4H     001BH     UNIT         ?PR?_MAINTENANCE_RUNTIME_MODE?MAINTENANCE_RUNTIME
+            CODE    11EFH     001AH     UNIT         ?PR?_MRT_DECODER_RESET?MAINTENANCE_RUNTIME
+            CODE    1209H     0019H     UNIT         ?PR?_HEARTBEAT_STATUS_NAME?MAIN
+            CODE    1222H     0013H     UNIT         ?PR?TIMER0_INIT?MAIN
+            CODE    1235H     0011H     UNIT         ?PR?_RESET_CONTROLLER_OUTPUT_ACTIVE?RESET_CONTROLLER
+            CODE    1246H     000DH     UNIT         ?PR?AP_RESET_ASSERT?MAIN
+            CODE    1253H     000CH     UNIT         ?C_C51STARTUP
+            CODE    125FH     000AH     UNIT         ?PR?AP_RESET_RELEASE?MAIN
+            CODE    1269H     0006H     UNIT         ?PR?MAIN?MAIN
+            CODE    126FH     0004H     UNIT         ?PR?WDT_INIT?MAIN
+            CODE    1273H     0004H     UNIT         ?PR?WDT_CLEAR?MAIN
+
+
+
+OVERLAY MAP OF MODULE:   .\list\stc8g1k08_reset (MAIN)
+
+
+SEGMENT                                            DATA_GROUP 
+  +--> CALLED SEGMENT                            START    LENGTH
+----------------------------------------------------------------
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 3
+
+
+?PR?INT2_ISR?MAIN                                0008H    0004H
+  +--> ?PR?_HEARTBEAT_MONITOR_ON_FALLING_EDG...
+  +--> ?PR?_MAINTENANCE_RUNTIME_ON_FALLING_E...
+
+?PR?_HEARTBEAT_MONITOR_ON_FALLING_EDG...         000CH    0004H
+
+?PR?_MAINTENANCE_RUNTIME_ON_FALLING_E...         000CH    000CH
+  +--> ?PR?_MRT_DECODER_RESET?MAINTENANCE_RU...
+
+*** NEW ROOT ***************************************************
+
+?C_C51STARTUP                                    -----    -----
+  +--> ?PR?MAIN?MAIN
+
+?PR?MAIN?MAIN                                    -----    -----
+  +--> ?PR?APP_INIT?MAIN
+  +--> ?PR?APP_RUN?MAIN
+
+?PR?APP_INIT?MAIN                                -----    -----
+  +--> ?PR?GPIO_RESET_INIT?MAIN
+  +--> ?PR?UART1_INIT?UART
+  +--> ?PR?TIMER0_INIT?MAIN
+  +--> ?PR?_HEARTBEAT_MONITOR_INIT?HEARTBEAT...
+  +--> ?PR?_RESET_CONTROLLER_INIT?RESET_CONT...
+  +--> ?PR?_MAINTENANCE_RUNTIME_INIT?MAINTEN...
+  +--> ?PR?WDT_INIT?MAIN
+  +--> ?CO?MAIN
+  +--> ?PR?_UART1_PUTS?UART
+
+?PR?GPIO_RESET_INIT?MAIN                         -----    -----
+  +--> ?PR?AP_RESET_RELEASE?MAIN
+
+?PR?UART1_INIT?UART                              0018H    0004H
+
+?PR?_HEARTBEAT_MONITOR_INIT?HEARTBEAT...         0035H    0004H
+
+?PR?_RESET_CONTROLLER_INIT?RESET_CONT...         0035H    0004H
+
+?PR?_MAINTENANCE_RUNTIME_INIT?MAINTEN...         0018H    0004H
+
+?PR?_UART1_PUTS?UART                             0038H    0003H
+  +--> ?PR?_UART1_PUTC?UART
+
+?PR?APP_RUN?MAIN                                 0018H    0018H
+  +--> ?PR?MILLIS_SNAPSHOT?MAIN
+  +--> ?PR?_HEARTBEAT_SNAPSHOT?MAIN
+  +--> ?PR?_MAINTENANCE_RUNTIME_SNAPSHOT?MAIN
+  +--> ?CO?MAIN
+  +--> ?PR?_UART1_PUTS?UART
+  +--> ?PR?_APP_RESUME_NORMAL?MAIN
+  +--> ?PR?WDT_CLEAR?MAIN
+  +--> ?PR?_APPLY_RESET_OUTPUT?MAIN
+  +--> ?PR?_UART1_PUT_U32?UART
+  +--> ?PR?_HEARTBEAT_MONITOR_STATUS?HEARTBE...
+  +--> ?PR?_RESET_CONTROLLER_UPDATE?RESET_CO...
+  +--> ?PR?_RESET_CONTROLLER_OUTPUT_ACTIVE?R...
+  +--> ?PR?_APP_REPORT?MAIN
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 4
+
+
+
+?PR?MILLIS_SNAPSHOT?MAIN                         0030H    0004H
+
+?PR?_HEARTBEAT_SNAPSHOT?MAIN                     0030H    0007H
+
+?PR?_MAINTENANCE_RUNTIME_SNAPSHOT?MAIN           0030H    000BH
+  +--> ?PR?_MAINTENANCE_RUNTIME_POLL?MAINTEN...
+  +--> ?PR?_MAINTENANCE_RUNTIME_MODE?MAINTEN...
+
+?PR?_MAINTENANCE_RUNTIME_POLL?MAINTEN...         003BH    000BH
+  +--> ?PR?_MRT_DECODER_RESET?MAINTENANCE_RU...
+
+?PR?_APP_RESUME_NORMAL?MAIN                      0030H    0005H
+  +--> ?PR?_HEARTBEAT_MONITOR_INIT?HEARTBEAT...
+  +--> ?PR?_RESET_CONTROLLER_INIT?RESET_CONT...
+  +--> ?PR?AP_RESET_RELEASE?MAIN
+
+?PR?_APPLY_RESET_OUTPUT?MAIN                     -----    -----
+  +--> ?PR?AP_RESET_ASSERT?MAIN
+  +--> ?PR?AP_RESET_RELEASE?MAIN
+  +--> ?CO?MAIN
+  +--> ?PR?_UART1_PUTS?UART
+
+?PR?AP_RESET_ASSERT?MAIN                         -----    -----
+  +--> ?PR?AP_RESET_RELEASE?MAIN
+
+?PR?_UART1_PUT_U32?UART                          0038H    000FH
+  +--> ?PR?_UART1_PUTC?UART
+
+?PR?_HEARTBEAT_MONITOR_STATUS?HEARTBE...         0038H    000FH
+  +--> ?PR?_HEARTBEAT_MONITOR_ELAPSED?HEARTB...
+
+?PR?_HEARTBEAT_MONITOR_ELAPSED?HEARTB...         0047H    0008H
+
+?PR?_RESET_CONTROLLER_UPDATE?RESET_CO...         0030H    000CH
+  +--> ?PR?_RESET_CONTROLLER_BEGIN_ASSERT?RE...
+  +--> ?PR?_RESET_CONTROLLER_ELAPSED?RESET_C...
+
+?PR?_RESET_CONTROLLER_ELAPSED?RESET_C...         003CH    0008H
+
+?PR?_APP_REPORT?MAIN                             0030H    0008H
+  +--> ?PR?_HEARTBEAT_MONITOR_STATUS?HEARTBE...
+  +--> ?CO?MAIN
+  +--> ?PR?_UART1_PUTS?UART
+  +--> ?PR?_HEARTBEAT_STATUS_NAME?MAIN
+  +--> ?PR?_RESET_STATE_NAME?MAIN
+  +--> ?PR?_UART1_PUT_U32?UART
+  +--> ?PR?_UART1_PUTC?UART
+
+?PR?_HEARTBEAT_STATUS_NAME?MAIN                  -----    -----
+  +--> ?CO?MAIN
+
+?PR?_RESET_STATE_NAME?MAIN                       -----    -----
+  +--> ?CO?MAIN
+
+
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 5
+
+
+SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:00B2H         PUBLIC        P3M0
+  D:00B1H         PUBLIC        P3M1
+  D:00CAH         PUBLIC        P5M0
+  D:00B0H         PUBLIC        P3
+  D:00C9H         PUBLIC        P5M1
+  C:0F55H         PUBLIC        timer0_isr
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  C:0FCBH         SYMBOL        _heartbeat_snapshot
+  D:00A8H         PUBLIC        IE
+  B:00C8H.5       PUBLIC        AP_RESET_TEST
+  D:004FH         SYMBOL        g_reset_controller
+  C:125FH         SYMBOL        ap_reset_release
+  C:1004H         SYMBOL        _app_resume_normal
+  C:1269H         PUBLIC        main
+  B:00C8H.4       PUBLIC        CPU_CHECK
+  C:0E56H         PUBLIC        int2_isr
+  C:115CH         SYMBOL        _reset_state_name
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  C:1273H         SYMBOL        wdt_clear
+  D:0058H         SYMBOL        g_maintenance_runtime
+  D:008EH         PUBLIC        AUXR
+  C:0BB6H         SYMBOL        _app_report
+  C:1209H         SYMBOL        _heartbeat_status_name
+  C:10C9H         SYMBOL        _apply_reset_output
+  B:00A8H.1       PUBLIC        ET0
+  B:0088H.5       PUBLIC        TF0
+  C:000EH         SYMBOL        _maintenance_runtime_snapshot
+  D:008CH         PUBLIC        TH0
+  C:119DH         SYMBOL        gpio_reset_init
+  C:1246H         SYMBOL        ap_reset_assert
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  D:00C1H         PUBLIC        WDT_CONTR
+  C:0DEBH         SYMBOL        app_init
+  D:005DH         SYMBOL        g_millisecond
+  C:11B9H         SYMBOL        millis_snapshot
+  D:0061H         SYMBOL        g_reset_output_active
+  C:126FH         SYMBOL        wdt_init
+  C:1222H         SYMBOL        timer0_init
+  D:0062H         SYMBOL        g_heartbeat_monitor
+  D:008FH         PUBLIC        INT_CLKO
+  C:0A35H         SYMBOL        app_run
+  -------         PROC          TIMER0_INIT
+  C:1222H         LINE#         26
+  C:1222H         LINE#         27
+  C:1222H         LINE#         28
+  C:1225H         LINE#         29
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 6
+
+
+  C:1228H         LINE#         30
+  C:122BH         LINE#         31
+  C:122EH         LINE#         32
+  C:1230H         LINE#         33
+  C:1232H         LINE#         34
+  C:1234H         LINE#         35
+  -------         ENDPROC       TIMER0_INIT
+  -------         PROC          AP_RESET_RELEASE
+  C:125FH         LINE#         38
+  C:125FH         LINE#         39
+  C:125FH         LINE#         40
+  C:1262H         LINE#         41
+  C:1265H         LINE#         42
+  C:1268H         LINE#         43
+  -------         ENDPROC       AP_RESET_RELEASE
+  -------         PROC          AP_RESET_ASSERT
+  C:1246H         LINE#         45
+  C:1246H         LINE#         46
+  C:1246H         LINE#         48
+  C:1249H         LINE#         52
+  C:124CH         LINE#         54
+  C:124FH         LINE#         55
+  C:1252H         LINE#         56
+  -------         ENDPROC       AP_RESET_ASSERT
+  -------         PROC          GPIO_RESET_INIT
+  C:119DH         LINE#         58
+  C:119DH         LINE#         59
+  C:119DH         LINE#         60
+  C:11A0H         LINE#         61
+  C:11A3H         LINE#         62
+  C:11A6H         LINE#         63
+  C:11A9H         LINE#         65
+  C:11ACH         LINE#         66
+  C:11AFH         LINE#         67
+  C:11B2H         LINE#         68
+  C:11B5H         LINE#         69
+  C:11B8H         LINE#         70
+  -------         ENDPROC       GPIO_RESET_INIT
+  -------         PROC          WDT_INIT
+  C:126FH         LINE#         72
+  C:126FH         LINE#         73
+  C:126FH         LINE#         74
+  C:1272H         LINE#         75
+  -------         ENDPROC       WDT_INIT
+  -------         PROC          WDT_CLEAR
+  C:1273H         LINE#         77
+  C:1273H         LINE#         78
+  C:1273H         LINE#         79
+  C:1276H         LINE#         80
+  -------         ENDPROC       WDT_CLEAR
+  -------         PROC          MILLIS_SNAPSHOT
+  -------         DO            
+  D:0030H         SYMBOL        value
+  D:0003H         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:11B9H         LINE#         83
+  C:11B9H         LINE#         84
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 7
+
+
+  C:11B9H         LINE#         86
+  C:11BDH         LINE#         88
+  C:11BFH         LINE#         89
+  C:11CFH         LINE#         90
+  C:11D3H         LINE#         91
+  C:11D3H         LINE#         92
+  -------         ENDPROC       MILLIS_SNAPSHOT
+  -------         PROC          _HEARTBEAT_SNAPSHOT
+  D:0030H         SYMBOL        snapshot
+  D:0033H         SYMBOL        now_ms
+  -------         DO            
+  D:0036H         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:0FCBH         LINE#         94
+  C:0FD1H         LINE#         96
+  C:0FD1H         LINE#         97
+  C:0FD7H         LINE#         99
+  C:0FD9H         LINE#         100
+  C:0FEAH         LINE#         101
+  C:0FFDH         LINE#         102
+  C:1003H         LINE#         103
+  -------         ENDPROC       _HEARTBEAT_SNAPSHOT
+  -------         PROC          _MAINTENANCE_RUNTIME_SNAPSHOT
+  D:0030H         SYMBOL        event
+  D:0033H         SYMBOL        mode
+  D:0036H         SYMBOL        now_ms
+  -------         DO            
+  D:003AH         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:000EH         LINE#         105
+  C:0014H         LINE#         109
+  C:0014H         LINE#         110
+  C:001AH         LINE#         112
+  C:001CH         LINE#         113
+  C:0037H         LINE#         114
+  C:004AH         LINE#         115
+  C:0050H         LINE#         116
+  -------         ENDPROC       _MAINTENANCE_RUNTIME_SNAPSHOT
+  -------         PROC          _APP_RESUME_NORMAL
+  D:0030H         SYMBOL        now_ms
+  -------         DO            
+  D:0034H         SYMBOL        saved_ea
+  -------         ENDDO         
+  C:1004H         LINE#         118
+  C:100CH         LINE#         119
+  C:100CH         LINE#         120
+  C:1012H         LINE#         122
+  C:1014H         LINE#         123
+  C:101DH         LINE#         124
+  C:102EH         LINE#         125
+  C:1031H         LINE#         126
+  C:1034H         LINE#         127
+  C:103AH         LINE#         128
+  -------         ENDPROC       _APP_RESUME_NORMAL
+  -------         PROC          _HEARTBEAT_STATUS_NAME
+  D:0007H         SYMBOL        status
+  C:1209H         LINE#         132
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 8
+
+
+  C:1209H         LINE#         133
+  C:1209H         LINE#         134
+  C:1213H         LINE#         135
+  C:121DH         LINE#         136
+  C:1221H         LINE#         137
+  -------         ENDPROC       _HEARTBEAT_STATUS_NAME
+  -------         PROC          _RESET_STATE_NAME
+  D:0007H         SYMBOL        state
+  C:115CH         LINE#         139
+  C:115CH         LINE#         140
+  C:115CH         LINE#         141
+  C:1166H         LINE#         142
+  C:1170H         LINE#         143
+  C:117AH         LINE#         144
+  C:117EH         LINE#         145
+  -------         ENDPROC       _RESET_STATE_NAME
+  -------         PROC          _APP_REPORT
+  D:0030H         SYMBOL        heartbeat
+  D:0033H         SYMBOL        now_ms
+  -------         DO            
+  D:0037H         SYMBOL        heartbeat_status
+  -------         ENDDO         
+  C:0BB6H         LINE#         147
+  C:0BC4H         LINE#         149
+  C:0BC4H         LINE#         152
+  C:0BDEH         LINE#         156
+  C:0BE7H         LINE#         157
+  C:0BEFH         LINE#         158
+  C:0BF8H         LINE#         159
+  C:0C00H         LINE#         160
+  C:0C09H         LINE#         161
+  C:0C18H         LINE#         162
+  C:0C21H         LINE#         163
+  C:0C41H         LINE#         164
+  C:0C4AH         LINE#         165
+  C:0C61H         LINE#         166
+  C:0C6AH         LINE#         167
+  C:0C76H         LINE#         168
+  C:0C7FH         LINE#         169
+  C:0C8BH         LINE#         170
+  C:0C94H         LINE#         171
+  C:0CA7H         LINE#         172
+  C:0CB0H         LINE#         173
+  C:0CBBH         LINE#         174
+  -------         ENDPROC       _APP_REPORT
+  -------         PROC          _APPLY_RESET_OUTPUT
+  D:0007H         SYMBOL        active
+  C:10C9H         LINE#         178
+  C:10C9H         LINE#         179
+  C:10C9H         LINE#         180
+  C:10CEH         LINE#         181
+  C:10D1H         LINE#         182
+  C:10D4H         LINE#         183
+  C:10D6H         LINE#         184
+  C:10D9H         LINE#         185
+  C:10D9H         LINE#         186
+  C:10DBH         LINE#         188
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 9
+
+
+  C:10EDH         LINE#         191
+  -------         ENDPROC       _APPLY_RESET_OUTPUT
+  -------         PROC          TIMER0_ISR
+  C:0F55H         LINE#         194
+  C:0F64H         LINE#         196
+  C:0F67H         LINE#         197
+  C:0F6AH         LINE#         198
+  C:0F83H         LINE#         199
+  -------         ENDPROC       TIMER0_ISR
+  -------         PROC          INT2_ISR
+  -------         DO            
+  D:0008H         SYMBOL        now_ms
+  -------         ENDDO         
+  C:0E56H         LINE#         201
+  C:0E73H         LINE#         203
+  C:0E83H         LINE#         206
+  C:0E8CH         LINE#         209
+  C:0E9DH         LINE#         210
+  -------         ENDPROC       INT2_ISR
+  -------         PROC          APP_INIT
+  C:0DEBH         LINE#         211
+  C:0DEBH         LINE#         212
+  C:0DEBH         LINE#         213
+  C:0DEEH         LINE#         215
+  C:0DF1H         LINE#         217
+  C:0DF4H         LINE#         218
+  C:0E05H         LINE#         219
+  C:0E16H         LINE#         220
+  C:0E27H         LINE#         221
+  C:0E2AH         LINE#         222
+  C:0E2DH         LINE#         223
+  C:0E30H         LINE#         224
+  C:0E32H         LINE#         227
+  C:0E3BH         LINE#         228
+  C:0E44H         LINE#         229
+  C:0E4DH         LINE#         230
+  -------         ENDPROC       APP_INIT
+  -------         PROC          APP_RUN
+  -------         DO            
+  D:0018H         SYMBOL        last_report
+  D:001CH         SYMBOL        now_ms
+  D:0020H         SYMBOL        heartbeat
+  D:002DH         SYMBOL        heartbeat_status
+  D:002EH         SYMBOL        mrt_event
+  D:002FH         SYMBOL        mrt_mode
+  -------         ENDDO         
+  C:0A35H         LINE#         235
+  C:0A35H         LINE#         236
+  C:0A35H         LINE#         244
+  C:0A40H         LINE#         245
+  C:0A40H         LINE#         246
+  C:0A52H         LINE#         249
+  C:0A70H         LINE#         252
+  C:0A75H         LINE#         254
+  C:0A7EH         LINE#         256
+  C:0A85H         LINE#         258
+  C:0A8BH         LINE#         261
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 10
+
+
+  C:0A8BH         LINE#         262
+  C:0A92H         LINE#         264
+  C:0A9BH         LINE#         267
+  C:0AA6H         LINE#         268
+  C:0AA6H         LINE#         270
+  C:0AB1H         LINE#         271
+  C:0AB4H         LINE#         272
+  C:0AB6H         LINE#         273
+  C:0AB6H         LINE#         276
+  C:0ABCH         LINE#         277
+  C:0AC0H         LINE#         278
+  C:0AC5H         LINE#         279
+  C:0AC5H         LINE#         280
+  C:0AC8H         LINE#         282
+  C:0AEDH         LINE#         283
+  C:0AF9H         LINE#         284
+  C:0B02H         LINE#         285
+  C:0B0DH         LINE#         286
+  C:0B16H         LINE#         287
+  C:0B16H         LINE#         289
+  C:0B19H         LINE#         290
+  C:0B19H         LINE#         293
+  C:0B41H         LINE#         296
+  C:0B62H         LINE#         298
+  C:0B6EH         LINE#         300
+  C:0B71H         LINE#         302
+  C:0B96H         LINE#         303
+  C:0BA2H         LINE#         304
+  C:0BB3H         LINE#         305
+  C:0BB3H         LINE#         307
+  -------         ENDPROC       APP_RUN
+  -------         PROC          MAIN
+  C:1269H         LINE#         309
+  C:1269H         LINE#         310
+  C:1269H         LINE#         311
+  C:126CH         LINE#         312
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        HEARTBEAT_MONITOR
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  C:0F19H         PUBLIC        _heartbeat_monitor_on_falling_edge
+  C:0EB8H         PUBLIC        _heartbeat_monitor_status
+  C:103BH         PUBLIC        _heartbeat_monitor_init
+  C:1082H         SYMBOL        _heartbeat_monitor_elapsed
+  -------         PROC          L?0011
+  -------         ENDPROC       L?0011
+  -------         PROC          _HEARTBEAT_MONITOR_ELAPSED
+  D:0047H         SYMBOL        now_ms
+  D:004BH         SYMBOL        then_ms
+  C:1082H         LINE#         3
+  C:108AH         LINE#         5
+  C:108AH         LINE#         6
+  C:109FH         LINE#         7
+  -------         ENDPROC       _HEARTBEAT_MONITOR_ELAPSED
+  -------         PROC          _HEARTBEAT_MONITOR_INIT
+  D:0001H         SYMBOL        monitor
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 11
+
+
+  D:0035H         SYMBOL        now_ms
+  C:103BH         LINE#         9
+  C:1043H         LINE#         10
+  C:1043H         LINE#         11
+  C:1047H         LINE#         12
+  C:1052H         LINE#         13
+  C:1060H         LINE#         14
+  C:106AH         LINE#         15
+  C:1071H         LINE#         16
+  -------         ENDPROC       _HEARTBEAT_MONITOR_INIT
+  -------         PROC          _HEARTBEAT_MONITOR_ON_FALLING_EDGE
+  D:0001H         SYMBOL        monitor
+  D:000CH         SYMBOL        now_ms
+  C:0F19H         LINE#         18
+  C:0F21H         LINE#         20
+  C:0F21H         LINE#         21
+  C:0F25H         LINE#         22
+  C:0F33H         LINE#         23
+  C:0F4CH         LINE#         24
+  C:0F54H         LINE#         25
+  -------         ENDPROC       _HEARTBEAT_MONITOR_ON_FALLING_EDGE
+  -------         PROC          _HEARTBEAT_MONITOR_STATUS
+  D:0038H         SYMBOL        monitor
+  D:003BH         SYMBOL        now_ms
+  D:003FH         SYMBOL        grace_ms
+  D:0043H         SYMBOL        timeout_ms
+  C:0EB8H         LINE#         27
+  C:0EC6H         LINE#         31
+  C:0EC6H         LINE#         32
+  C:0ED1H         LINE#         33
+  C:0EEBH         LINE#         34
+  C:0EEEH         LINE#         35
+  C:0EEEH         LINE#         36
+  C:0F13H         LINE#         37
+  C:0F13H         LINE#         38
+  C:0F16H         LINE#         39
+  C:0F16H         LINE#         40
+  C:0F18H         LINE#         41
+  -------         ENDPROC       _HEARTBEAT_MONITOR_STATUS
+  -------         ENDMOD        HEARTBEAT_MONITOR
+
+  -------         MODULE        UART
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:00C8H         PUBLIC        P5
+  C:0F90H         PUBLIC        uart1_init
+  D:00A2H         PUBLIC        P_SW1
+  D:00A8H         PUBLIC        IE
+  C:0003H         PUBLIC        _uart1_putc
+  B:0098H.1       PUBLIC        TI
+  C:10EEH         PUBLIC        _uart1_puts
+  D:0099H         PUBLIC        SBUF
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  D:008EH         PUBLIC        AUXR
+  B:00A8H.3       PUBLIC        ET1
+  D:008DH         PUBLIC        TH1
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 12
+
+
+  D:008BH         PUBLIC        TL1
+  B:0088H.6       PUBLIC        TR1
+  C:0D62H         PUBLIC        _uart1_put_u32
+  D:008FH         PUBLIC        INT_CLKO
+  -------         PROC          UART1_INIT
+  -------         DO            
+  D:0018H         SYMBOL        reload
+  -------         ENDDO         
+  C:0F90H         LINE#         5
+  C:0F90H         LINE#         6
+  C:0F90H         LINE#         9
+  C:0F93H         LINE#         10
+  C:0F96H         LINE#         11
+  C:0F98H         LINE#         12
+  C:0FA3H         LINE#         14
+  C:0FA5H         LINE#         15
+  C:0FA8H         LINE#         16
+  C:0FABH         LINE#         17
+  C:0FAEH         LINE#         18
+  C:0FB1H         LINE#         19
+  C:0FC0H         LINE#         20
+  C:0FC3H         LINE#         21
+  C:0FC5H         LINE#         22
+  C:0FC8H         LINE#         23
+  C:0FCAH         LINE#         24
+  -------         ENDPROC       UART1_INIT
+  -------         PROC          _UART1_PUTC
+  D:0007H         SYMBOL        value
+  C:0003H         LINE#         26
+  C:0003H         LINE#         27
+  C:0003H         LINE#         28
+  C:0005H         LINE#         29
+  C:0008H         LINE#         30
+  C:0008H         LINE#         31
+  C:000AH         LINE#         32
+  -------         ENDPROC       _UART1_PUTC
+  -------         PROC          _UART1_PUTS
+  D:0038H         SYMBOL        text
+  C:10EEH         LINE#         34
+  C:10F4H         LINE#         35
+  C:10F4H         LINE#         36
+  C:10FFH         LINE#         37
+  C:1110H         LINE#         38
+  C:1112H         LINE#         39
+  -------         ENDPROC       _UART1_PUTS
+  -------         PROC          _UART1_PUT_U32
+  D:0038H         SYMBOL        value
+  -------         DO            
+  D:003CH         SYMBOL        digits
+  D:0046H         SYMBOL        count
+  -------         ENDDO         
+  C:0D62H         LINE#         41
+  C:0D6AH         LINE#         42
+  C:0D6AH         LINE#         44
+  C:0D6DH         LINE#         46
+  C:0D7FH         LINE#         47
+  C:0D84H         LINE#         49
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 13
+
+
+  C:0D84H         LINE#         50
+  C:0D9EH         LINE#         51
+  C:0DBDH         LINE#         52
+  C:0DD6H         LINE#         53
+  C:0DD8H         LINE#         54
+  C:0DDCH         LINE#         55
+  C:0DE8H         LINE#         56
+  C:0DEAH         LINE#         57
+  -------         ENDPROC       _UART1_PUT_U32
+  -------         ENDMOD        UART
+
+  -------         MODULE        RESET_CONTROLLER
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  C:117FH         SYMBOL        _reset_controller_elapsed
+  C:1138H         SYMBOL        _reset_controller_begin_assert
+  C:0CC4H         PUBLIC        _reset_controller_update
+  C:1235H         PUBLIC        _reset_controller_output_active
+  C:10A0H         PUBLIC        _reset_controller_init
+  -------         PROC          _RESET_CONTROLLER_ELAPSED
+  D:003CH         SYMBOL        now_ms
+  D:0040H         SYMBOL        then_ms
+  C:117FH         LINE#         3
+  C:1187H         LINE#         5
+  C:1187H         LINE#         6
+  C:119CH         LINE#         7
+  -------         ENDPROC       _RESET_CONTROLLER_ELAPSED
+  -------         PROC          _RESET_CONTROLLER_BEGIN_ASSERT
+  D:0001H         SYMBOL        controller
+  D:0004H         SYMBOL        now_ms
+  C:1138H         LINE#         9
+  C:1138H         LINE#         11
+  C:1138H         LINE#         12
+  C:113DH         LINE#         13
+  C:1143H         LINE#         14
+  -------         ENDPROC       _RESET_CONTROLLER_BEGIN_ASSERT
+  -------         PROC          _RESET_CONTROLLER_INIT
+  D:0001H         SYMBOL        controller
+  D:0035H         SYMBOL        now_ms
+  C:10A0H         LINE#         17
+  C:10A8H         LINE#         19
+  C:10A8H         LINE#         20
+  C:10ACH         LINE#         21
+  C:10B0H         LINE#         22
+  C:10BEH         LINE#         23
+  C:10C8H         LINE#         24
+  -------         ENDPROC       _RESET_CONTROLLER_INIT
+  -------         PROC          _RESET_CONTROLLER_UPDATE
+  D:0030H         SYMBOL        controller
+  D:0033H         SYMBOL        heartbeat_status
+  D:0034H         SYMBOL        now_ms
+  D:0038H         SYMBOL        pulse_ms
+  C:0CC4H         LINE#         26
+  C:0CCCH         LINE#         30
+  C:0CCCH         LINE#         31
+  C:0CD7H         LINE#         33
+  C:0CE2H         LINE#         34
+  C:0CE7H         LINE#         35
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 14
+
+
+  C:0CE7H         LINE#         36
+  C:0CEFH         LINE#         37
+  C:0CEFH         LINE#         38
+  C:0CF1H         LINE#         40
+  C:0CF1H         LINE#         42
+  C:0CFDH         LINE#         43
+  C:0D03H         LINE#         44
+  C:0D0EH         LINE#         45
+  C:0D0EH         LINE#         47
+  C:0D0EH         LINE#         49
+  C:0D1AH         LINE#         50
+  C:0D41H         LINE#         51
+  C:0D49H         LINE#         52
+  C:0D4BH         LINE#         54
+  C:0D4BH         LINE#         56
+  C:0D5CH         LINE#         57
+  C:0D5CH         LINE#         58
+  C:0D61H         LINE#         59
+  C:0D61H         LINE#         60
+  -------         ENDPROC       _RESET_CONTROLLER_UPDATE
+  -------         PROC          _RESET_CONTROLLER_OUTPUT_ACTIVE
+  D:0001H         SYMBOL        controller
+  C:1235H         LINE#         70
+  C:1235H         LINE#         71
+  C:1235H         LINE#         72
+  C:1245H         LINE#         73
+  -------         ENDPROC       _RESET_CONTROLLER_OUTPUT_ACTIVE
+  -------         ENDMOD        RESET_CONTROLLER
+
+  -------         MODULE        MAINTENANCE_RUNTIME
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  C:1113H         PUBLIC        _maintenance_runtime_init
+  C:089DH         PUBLIC        _maintenance_runtime_poll
+  C:11F5H         SYMBOL        _mrt_decoder_reset
+  C:053AH         PUBLIC        _maintenance_runtime_on_falling_edge
+  C:11D4H         PUBLIC        _maintenance_runtime_mode
+  -------         PROC          L?0058
+  -------         ENDPROC       L?0058
+  -------         PROC          _MRT_DECODER_RESET
+  D:0001H         SYMBOL        mrt
+  -------         DO            
+  D:0007H         SYMBOL        state
+  -------         ENDDO         
+  C:11F5H         LINE#         27
+  C:11F5H         LINE#         28
+  C:11F5H         LINE#         29
+  C:11FCH         LINE#         30
+  C:11FFH         LINE#         31
+  C:1202H         LINE#         32
+  -------         ENDPROC       _MRT_DECODER_RESET
+  -------         PROC          _MAINTENANCE_RUNTIME_INIT
+  D:0001H         SYMBOL        mrt
+  D:0018H         SYMBOL        now_ms
+  C:1113H         LINE#         37
+  C:111BH         LINE#         39
+  C:111BH         LINE#         40
+  C:111FH         LINE#         41
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 15
+
+
+  C:1127H         LINE#         42
+  C:1130H         LINE#         43
+  C:1137H         LINE#         44
+  -------         ENDPROC       _MAINTENANCE_RUNTIME_INIT
+  -------         PROC          _MAINTENANCE_RUNTIME_ON_FALLING_EDGE
+  D:000CH         SYMBOL        mrt
+  D:000FH         SYMBOL        now_ms
+  -------         DO            
+  D:0013H         SYMBOL        interval
+  D:0015H         SYMBOL        state
+  D:0016H         SYMBOL        decoder_state
+  D:0017H         SYMBOL        payload_count
+  -------         ENDDO         
+  C:053AH         LINE#         47
+  C:0548H         LINE#         49
+  C:0548H         LINE#         55
+  C:0553H         LINE#         57
+  C:0561H         LINE#         60
+  C:0568H         LINE#         61
+  C:0570H         LINE#         62
+  C:0576H         LINE#         63
+  C:0579H         LINE#         65
+  C:0579H         LINE#         68
+  C:0592H         LINE#         69
+  C:0598H         LINE#         71
+  C:059EH         LINE#         74
+  C:05A0H         LINE#         75
+  C:05B5H         LINE#         76
+  C:05BBH         LINE#         77
+  C:05BBH         LINE#         78
+  C:05BEH         LINE#         80
+  C:05BEH         LINE#         83
+  C:05C4H         LINE#         84
+  C:05E5H         LINE#         85
+  C:05E5H         LINE#         86
+  C:05E8H         LINE#         87
+  C:05EEH         LINE#         88
+  C:05EEH         LINE#         89
+  C:05F1H         LINE#         91
+  C:05F1H         LINE#         94
+  C:05F7H         LINE#         95
+  C:0619H         LINE#         96
+  C:0619H         LINE#         97
+  C:061BH         LINE#         98
+  C:0623H         LINE#         99
+  C:0626H         LINE#         100
+  C:0631H         LINE#         101
+  C:0634H         LINE#         103
+  C:0634H         LINE#         106
+  C:063DH         LINE#         107
+  C:0650H         LINE#         113
+  C:0655H         LINE#         114
+  C:065DH         LINE#         115
+  C:0663H         LINE#         116
+  C:066FH         LINE#         117
+  C:0671H         LINE#         119
+  C:0671H         LINE#         120
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 16
+
+
+  C:0676H         LINE#         121
+  C:0679H         LINE#         122
+  C:0681H         LINE#         123
+  C:068DH         LINE#         124
+  C:0696H         LINE#         125
+  C:0698H         LINE#         127
+  C:0698H         LINE#         128
+  C:069EH         LINE#         129
+  C:06C2H         LINE#         130
+  C:06C8H         LINE#         131
+  C:06CAH         LINE#         132
+  C:06CCH         LINE#         133
+  C:06D3H         LINE#         134
+  C:06DCH         LINE#         135
+  C:06DCH         LINE#         136
+  C:06EDH         LINE#         137
+  C:06F9H         LINE#         138
+  C:06F9H         LINE#         139
+  C:06F9H         LINE#         140
+  -------         ENDPROC       _MAINTENANCE_RUNTIME_ON_FALLING_EDGE
+  -------         PROC          _MAINTENANCE_RUNTIME_POLL
+  D:003BH         SYMBOL        mrt
+  D:003EH         SYMBOL        now_ms
+  -------         DO            
+  D:0006H         SYMBOL        elapsed
+  D:0042H         SYMBOL        state
+  D:0043H         SYMBOL        decoder_state
+  D:0044H         SYMBOL        payload_count
+  D:0045H         SYMBOL        maintenance_active
+  -------         ENDDO         
+  C:089DH         LINE#         143
+  C:08ABH         LINE#         146
+  C:08ABH         LINE#         153
+  C:08B5H         LINE#         155
+  C:08C3H         LINE#         156
+  C:08CAH         LINE#         158
+  C:08D5H         LINE#         159
+  C:08D8H         LINE#         160
+  C:08E0H         LINE#         161
+  C:08E4H         LINE#         162
+  C:0906H         LINE#         163
+  C:0909H         LINE#         164
+  C:0909H         LINE#         165
+  C:090CH         LINE#         166
+  C:090CH         LINE#         169
+  C:0910H         LINE#         170
+  C:093FH         LINE#         172
+  C:0942H         LINE#         173
+  C:0950H         LINE#         174
+  C:0959H         LINE#         175
+  C:095CH         LINE#         176
+  C:095CH         LINE#         177
+  C:095CH         LINE#         180
+  C:0965H         LINE#         181
+  C:0968H         LINE#         182
+  C:0968H         LINE#         184
+  C:096EH         LINE#         187
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 17
+
+
+  C:0975H         LINE#         188
+  C:0989H         LINE#         189
+  C:099BH         LINE#         190
+  C:09A4H         LINE#         193
+  C:09A8H         LINE#         194
+  C:09B0H         LINE#         195
+  C:09BCH         LINE#         196
+  C:09D8H         LINE#         197
+  C:09DBH         LINE#         198
+  C:09DEH         LINE#         199
+  C:09DEH         LINE#         202
+  C:09E4H         LINE#         203
+  C:09E8H         LINE#         204
+  C:09EBH         LINE#         205
+  C:09F9H         LINE#         206
+  C:0A02H         LINE#         207
+  C:0A02H         LINE#         208
+  C:0A05H         LINE#         209
+  C:0A08H         LINE#         210
+  C:0A08H         LINE#         217
+  C:0A0CH         LINE#         218
+  C:0A2FH         LINE#         219
+  C:0A32H         LINE#         220
+  C:0A32H         LINE#         221
+  C:0A32H         LINE#         223
+  C:0A34H         LINE#         224
+  -------         ENDPROC       _MAINTENANCE_RUNTIME_POLL
+  -------         PROC          _MAINTENANCE_RUNTIME_MODE
+  D:0001H         SYMBOL        mrt
+  C:11D4H         LINE#         227
+  C:11D4H         LINE#         229
+  C:11D4H         LINE#         230
+  C:11DAH         LINE#         231
+  C:11EEH         LINE#         234
+  -------         ENDPROC       _MAINTENANCE_RUNTIME_MODE
+  -------         ENDMOD        MAINTENANCE_RUNTIME
+
+  -------         MODULE        ?C?COPY
+  C:0126H         PUBLIC        ?C?COPY
+  -------         ENDMOD        ?C?COPY
+
+  -------         MODULE        ?C?CLDPTR
+  C:014CH         PUBLIC        ?C?CLDPTR
+  -------         ENDMOD        ?C?CLDPTR
+
+  -------         MODULE        ?C?CLDOPTR
+  C:0165H         PUBLIC        ?C?CLDOPTR
+  -------         ENDMOD        ?C?CLDOPTR
+
+  -------         MODULE        ?C?CSTPTR
+  C:0192H         PUBLIC        ?C?CSTPTR
+  -------         ENDMOD        ?C?CSTPTR
+
+  -------         MODULE        ?C?CSTOPTR
+  C:01A4H         PUBLIC        ?C?CSTOPTR
+  -------         ENDMOD        ?C?CSTOPTR
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 18
+
+
+  -------         MODULE        ?C?ILDPTR
+  C:01C6H         PUBLIC        ?C?ILDPTR
+  -------         ENDMOD        ?C?ILDPTR
+
+  -------         MODULE        ?C?ILDOPTR
+  C:01F1H         PUBLIC        ?C?ILDOPTR
+  -------         ENDMOD        ?C?ILDOPTR
+
+  -------         MODULE        ?C?ISTPTR
+  C:0229H         PUBLIC        ?C?ISTPTR
+  -------         ENDMOD        ?C?ISTPTR
+
+  -------         MODULE        ?C?ISTOPTR
+  C:0248H         PUBLIC        ?C?ISTOPTR
+  -------         ENDMOD        ?C?ISTOPTR
+
+  -------         MODULE        ?C?ULDIV
+  C:02B1H         PUBLIC        ?C?ULDIV
+  -------         ENDMOD        ?C?ULDIV
+
+  -------         MODULE        ?C?ULCMP
+  C:0343H         PUBLIC        ?C?ULCMP
+  -------         ENDMOD        ?C?ULCMP
+
+  -------         MODULE        ?C?ULSHR
+  C:0354H         PUBLIC        ?C?ULSHR
+  -------         ENDMOD        ?C?ULSHR
+
+  -------         MODULE        ?C?LLDPTR
+  C:0367H         PUBLIC        ?C?LLDPTR
+  -------         ENDMOD        ?C?LLDPTR
+
+  -------         MODULE        ?C?LLDOPTR
+  C:0387H         PUBLIC        ?C?LLDOPTR
+  -------         ENDMOD        ?C?LLDOPTR
+
+  -------         MODULE        ?C?LSTPTR
+  C:03B7H         PUBLIC        ?C?LSTPTR
+  -------         ENDMOD        ?C?LSTPTR
+
+  -------         MODULE        ?C?LSTOPTR
+  C:03D1H         PUBLIC        ?C?LSTOPTR
+  -------         ENDMOD        ?C?LSTOPTR
+
+  -------         MODULE        ?C?LLDOPTR0
+  C:03F5H         PUBLIC        ?C?LLDOPTR0
+  -------         ENDMOD        ?C?LLDOPTR0
+
+  -------         MODULE        ?C?LSTKOPTR
+  C:0425H         PUBLIC        ?C?LSTKOPTR
+  -------         ENDMOD        ?C?LSTKOPTR
+
+  -------         MODULE        ?C?LLDIDATA
+  C:0449H         PUBLIC        ?C?LLDIDATA
+  -------         ENDMOD        ?C?LLDIDATA
+
+  -------         MODULE        ?C?LLDXDATA
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/21/2026  10:55:33  PAGE 19
+
+
+  C:0455H         PUBLIC        ?C?LLDXDATA
+  -------         ENDMOD        ?C?LLDXDATA
+
+  -------         MODULE        ?C?LLDPDATA
+  C:0461H         PUBLIC        ?C?LLDPDATA
+  -------         ENDMOD        ?C?LLDPDATA
+
+  -------         MODULE        ?C?LLDCODE
+  C:046DH         PUBLIC        ?C?LLDCODE
+  -------         ENDMOD        ?C?LLDCODE
+
+  -------         MODULE        ?C?LLDIDATA0
+  C:047DH         PUBLIC        ?C?LLDIDATA0
+  -------         ENDMOD        ?C?LLDIDATA0
+
+  -------         MODULE        ?C?LLDXDATA0
+  C:048AH         PUBLIC        ?C?LLDXDATA0
+  -------         ENDMOD        ?C?LLDXDATA0
+
+  -------         MODULE        ?C?LLDPDATA0
+  C:0496H         PUBLIC        ?C?LLDPDATA0
+  -------         ENDMOD        ?C?LLDPDATA0
+
+  -------         MODULE        ?C?LLDCODE0
+  C:04A3H         PUBLIC        ?C?LLDCODE0
+  -------         ENDMOD        ?C?LLDCODE0
+
+  -------         MODULE        ?C?LSTIDATA
+  C:04B3H         PUBLIC        ?C?LSTIDATA
+  -------         ENDMOD        ?C?LSTIDATA
+
+  -------         MODULE        ?C?LSTXDATA
+  C:04BFH         PUBLIC        ?C?LSTXDATA
+  -------         ENDMOD        ?C?LSTXDATA
+
+  -------         MODULE        ?C?LSTPDATA
+  C:04CBH         PUBLIC        ?C?LSTPDATA
+  -------         ENDMOD        ?C?LSTPDATA
+
+  -------         MODULE        ?C?LSTKIDATA
+  C:04D7H         PUBLIC        ?C?LSTKIDATA
+  -------         ENDMOD        ?C?LSTKIDATA
+
+  -------         MODULE        ?C?LSTKXDATA
+  C:04F0H         PUBLIC        ?C?LSTKXDATA
+  -------         ENDMOD        ?C?LSTKXDATA
+
+  -------         MODULE        ?C?LSTKPDATA
+  C:0521H         PUBLIC        ?C?LSTKPDATA
+  -------         ENDMOD        ?C?LSTKPDATA
+
+Program Size: data=112.0 xdata=0 code=4725
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

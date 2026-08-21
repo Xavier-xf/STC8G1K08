@@ -1,0 +1,347 @@
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\User\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;..\Driver\inc) DE
+                    -BUG OBJECTEXTEND PRINT(.\list\main.lst) TABS(2) OBJECT(.\list\main.obj)
+
+line level    source
+
+   1          #include "Config.h"
+   2          #include "heartbeat_monitor.h"
+   3          #include "reset_controller.h"
+   4          #include "maintenance_runtime.h"
+   5          #include "uart.h"
+   6          
+   7          /*
+   8           * STC8G1K08 正式外部复位固件
+   9           *
+  10           * P5.4/INT2 只接收 CPU_CHECK 下降沿。
+  11           * P5.5 默认输入高阻，只有 RESET_ASSERT 状态才驱动 Q23/AP-RESET。
+  12           * 当前 AP_RESET_ASSERT_LEVEL=0 为低有效假设，后续可只改配置宏。
+  13           */
+  14          
+  15          #define P5_CPU_CHECK_MASK 0x10
+  16          #define P5_AP_RESET_MASK 0x20
+  17          #define P3_UART_RX_MASK 0x01
+  18          #define P3_UART_TX_MASK 0x02
+  19          
+  20          static volatile heartbeat_monitor_ms_t g_millisecond;
+  21          static heartbeat_monitor_t g_heartbeat_monitor;
+  22          static reset_controller_t g_reset_controller;
+  23          static maintenance_runtime_t g_maintenance_runtime;
+  24          static unsigned char g_reset_output_active;
+  25          
+  26          static void timer0_init(void)
+  27          {
+  28   1          TMOD &= (unsigned char)~0x03;
+  29   1          AUXR |= 0x80;
+  30   1          TH0 = (unsigned char)(TIMER0_RELOAD >> 8);
+  31   1          TL0 = (unsigned char)TIMER0_RELOAD;
+  32   1          TF0 = 0;
+  33   1          ET0 = 1;
+  34   1          TR0 = 1;
+  35   1      }
+  36          
+  37          
+  38          static void ap_reset_release(void)
+  39          {
+  40   1          P5M1 |= P5_AP_RESET_MASK;
+  41   1          P5M0 &= (unsigned char)~P5_AP_RESET_MASK;
+  42   1          P5 |= P5_AP_RESET_MASK;
+  43   1      }
+  44          
+  45          static void ap_reset_assert(void)
+  46          {
+  47   1          /* 先回到高阻，再预置锁存值，最后切换推挽，避免切换瞬间毛刺。 */
+  48   1          ap_reset_release();
+  49   1          #if AP_RESET_ASSERT_LEVEL != 0U
+                      P5 |= P5_AP_RESET_MASK;
+              #else
+  52   1              P5 &= (unsigned char)~P5_AP_RESET_MASK;
+  53   1      #endif
+  54   1          P5M1 &= (unsigned char)~P5_AP_RESET_MASK;
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 2   
+
+  55   1          P5M0 |= P5_AP_RESET_MASK;
+  56   1      }
+  57          
+  58          static void gpio_reset_init(void)
+  59          {
+  60   1          P5M1 |= P5_CPU_CHECK_MASK;
+  61   1          P5M0 &= (unsigned char)~P5_CPU_CHECK_MASK;
+  62   1          P5 |= P5_CPU_CHECK_MASK;
+  63   1          ap_reset_release();
+  64   1      
+  65   1          P3M1 |= P3_UART_RX_MASK;
+  66   1          P3M0 &= (unsigned char)~P3_UART_RX_MASK;
+  67   1          P3M1 &= (unsigned char)~P3_UART_TX_MASK;
+  68   1          P3M0 |= P3_UART_TX_MASK;
+  69   1          P3 |= P3_UART_TX_MASK;
+  70   1      }
+  71          
+  72          static void wdt_init(void)
+  73          {
+  74   1          WDT_CONTR = (unsigned char)(WDT_PRESCALE | WDT_ENABLE_MASK);
+  75   1      }
+  76          
+  77          static void wdt_clear(void)
+  78          {
+  79   1          WDT_CONTR |= WDT_CLEAR_MASK;
+  80   1      }
+  81          
+  82          
+  83          static heartbeat_monitor_ms_t millis_snapshot(void)
+  84          {
+  85   1          heartbeat_monitor_ms_t value;
+  86   1          unsigned char saved_ea = EA;
+  87   1      
+  88   1          EA = 0;
+  89   1          value = g_millisecond;
+  90   1          EA = saved_ea;
+  91   1          return value;
+  92   1      }
+  93          
+  94          static void heartbeat_snapshot(heartbeat_monitor_t *snapshot,
+  95                                         heartbeat_monitor_ms_t *now_ms)
+  96          {
+  97   1          unsigned char saved_ea = EA;
+  98   1      
+  99   1          EA = 0;
+ 100   1          *now_ms = g_millisecond;
+ 101   1          *snapshot = g_heartbeat_monitor;
+ 102   1          EA = saved_ea;
+ 103   1      }
+ 104          
+ 105          static void maintenance_runtime_snapshot(
+ 106              maintenance_runtime_event_t *event,
+ 107              maintenance_runtime_mode_t *mode,
+ 108              heartbeat_monitor_ms_t now_ms)
+ 109          {
+ 110   1          unsigned char saved_ea = EA;
+ 111   1      
+ 112   1          EA = 0;
+ 113   1          *event = maintenance_runtime_poll(&g_maintenance_runtime, now_ms);
+ 114   1          *mode = maintenance_runtime_mode(&g_maintenance_runtime);
+ 115   1          EA = saved_ea;
+ 116   1      }
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 3   
+
+ 117          
+ 118          static void app_resume_normal(heartbeat_monitor_ms_t now_ms)
+ 119          {
+ 120   1          unsigned char saved_ea = EA;
+ 121   1      
+ 122   1          EA = 0;
+ 123   1          heartbeat_monitor_init(&g_heartbeat_monitor, now_ms);
+ 124   1          reset_controller_init(&g_reset_controller, now_ms);
+ 125   1          g_reset_output_active = 0U;
+ 126   1          ap_reset_release();
+ 127   1          EA = saved_ea;
+ 128   1      }
+ 129          
+ 130          
+ 131          #if STC8G1K08_UART_LOG_ENABLE
+ 132          static const char *heartbeat_status_name(heartbeat_monitor_status_t status)
+ 133          {
+ 134   1          if (status == HEARTBEAT_MONITOR_STARTUP) return "startup";
+ 135   1          if (status == HEARTBEAT_MONITOR_HEALTHY) return "healthy";
+ 136   1          return "timeout";
+ 137   1      }
+ 138          
+ 139          static const char *reset_state_name(reset_controller_state_t state)
+ 140          {
+ 141   1          if (state == RESET_CONTROLLER_STARTUP) return "startup";
+ 142   1          if (state == RESET_CONTROLLER_MONITORING) return "monitoring";
+ 143   1          if (state == RESET_CONTROLLER_ASSERT) return "assert";
+ 144   1          return "wait-recovery";
+ 145   1      }
+ 146          
+ 147          static void app_report(const heartbeat_monitor_t *heartbeat,
+ 148                                 heartbeat_monitor_ms_t now_ms)
+ 149          {
+ 150   1          heartbeat_monitor_status_t heartbeat_status;
+ 151   1      
+ 152   1          heartbeat_status = heartbeat_monitor_status(heartbeat, now_ms,
+ 153   1                                                       RESET_HEARTBEAT_GRACE_MS,
+ 154   1                                                       HEARTBEAT_MONITOR_TIMEOUT_MS);
+ 155   1      
+ 156   1          uart1_puts("reset heartbeat=");
+ 157   1          uart1_puts(heartbeat_status_name(heartbeat_status));
+ 158   1          uart1_puts(" state=");
+ 159   1          uart1_puts(reset_state_name(g_reset_controller.state));
+ 160   1          uart1_puts(" edges=");
+ 161   1          uart1_put_u32(heartbeat->edge_count);
+ 162   1          uart1_puts(" age_ms=");
+ 163   1          uart1_put_u32((unsigned long)(now_ms - heartbeat->last_edge_ms));
+ 164   1          uart1_puts(" seen=");
+ 165   1          uart1_putc(heartbeat->edge_seen != 0U ? '1' : '0');
+ 166   1          uart1_puts(" P54=");
+ 167   1          uart1_putc(CPU_CHECK ? '1' : '0');
+ 168   1          uart1_puts(" P55=");
+ 169   1          uart1_putc(AP_RESET_TEST ? '1' : '0');
+ 170   1          uart1_puts(" output=");
+ 171   1          uart1_puts(g_reset_output_active ? "assert" : "high-z");
+ 172   1          uart1_puts(" resets=");
+ 173   1          uart1_put_u32(g_reset_controller.reset_count);
+ 174   1          uart1_puts(" wdt=on\r\n");
+ 175   1      }
+ 176          #endif
+ 177          
+ 178          static void apply_reset_output(unsigned char active)
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 4   
+
+ 179          {
+ 180   1          if (active == g_reset_output_active) return;
+ 181   1          if (active != 0U) {
+ 182   2              ap_reset_assert();
+ 183   2          } else {
+ 184   2              ap_reset_release();
+ 185   2          }
+ 186   1          g_reset_output_active = active;
+ 187   1      #if STC8G1K08_UART_LOG_ENABLE
+ 188   1          uart1_puts(active != 0U ? "AP_RESET assert\r\n" :
+ 189   1                                   "AP_RESET release\r\n");
+ 190   1      #endif
+ 191   1      }
+ 192          
+ 193          
+ 194          void timer0_isr(void) interrupt 1
+ 195          {
+ 196   1          TH0 = (unsigned char)(TIMER0_RELOAD >> 8);
+ 197   1          TL0 = (unsigned char)TIMER0_RELOAD;
+ 198   1          ++g_millisecond;
+ 199   1      }
+ 200          
+ 201          void int2_isr(void) interrupt 10
+ 202          {
+ 203   1          heartbeat_monitor_ms_t now_ms = g_millisecond;
+ 204   1      
+ 205   1          /* 1. 先更新心跳监控（AP_RESET 决策的关键数据）*/
+ 206   1          heartbeat_monitor_on_falling_edge(&g_heartbeat_monitor, now_ms);
+ 207   1      
+ 208   1          /* 2. 再交给维护协议解码器（不影响心跳记录）*/
+ 209   1          maintenance_runtime_on_falling_edge(&g_maintenance_runtime, now_ms);
+ 210   1      }
+ 211          static void app_init(void)
+ 212          {
+ 213   1          gpio_reset_init();
+ 214   1      #if STC8G1K08_UART_LOG_ENABLE
+ 215   1          uart1_init();
+ 216   1      #endif
+ 217   1          timer0_init();
+ 218   1          heartbeat_monitor_init(&g_heartbeat_monitor, 0UL);
+ 219   1          reset_controller_init(&g_reset_controller, 0UL);
+ 220   1          maintenance_runtime_init(&g_maintenance_runtime, 0UL);
+ 221   1          g_reset_output_active = 0U;
+ 222   1          INT_CLKO |= INT2_ENABLE_MASK;
+ 223   1          wdt_init();
+ 224   1          EA = 1;
+ 225   1      
+ 226   1      #if STC8G1K08_UART_LOG_ENABLE
+ 227   1          uart1_puts("\r\nSTC8G1K08 reset firmware v" STC8G1K08_FIRMWARE_VERSION "\r\n");
+ 228   1          uart1_puts("P54=CPU_CHECK INT2 falling edge\r\n");
+ 229   1          uart1_puts("P55=AP-RESET controlled pulse, WDT=ON\r\n");
+ 230   1          uart1_puts("grace=30000ms timeout=5000ms pulse=200ms wdt=128x\r\n");
+ 231   1      #endif
+ 232   1      }
+ 233          
+ 234          
+ 235          static void app_run(void)
+ 236          {
+ 237   1          heartbeat_monitor_ms_t last_report;
+ 238   1          heartbeat_monitor_ms_t now_ms;
+ 239   1          heartbeat_monitor_t heartbeat;
+ 240   1          heartbeat_monitor_status_t heartbeat_status;
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 5   
+
+ 241   1          maintenance_runtime_event_t mrt_event;
+ 242   1          maintenance_runtime_mode_t mrt_mode;
+ 243   1      
+ 244   1          last_report = millis_snapshot();
+ 245   1          for (;;) {
+ 246   2              heartbeat_snapshot(&heartbeat, &now_ms);
+ 247   2      
+ 248   2              /* 轮询维护运行时事件 */
+ 249   2              maintenance_runtime_snapshot(&mrt_event, &mrt_mode, now_ms);
+ 250   2      
+ 251   2              /* 处理维护模式事件 */
+ 252   2              if (mrt_event == MRT_EVENT_ENTER) {
+ 253   3      #if STC8G1K08_UART_LOG_ENABLE
+ 254   3                  uart1_puts("MNT ENTER\r\n");
+ 255   3      #endif
+ 256   3              } else if (mrt_event == MRT_EVENT_EXIT) {
+ 257   3      #if STC8G1K08_UART_LOG_ENABLE
+ 258   3                  uart1_puts("MNT EXIT\r\n");
+ 259   3      #endif
+ 260   3                  /* 退出维护模式：原子重置心跳和复位状态，恢复启动宽限期 */
+ 261   3                  app_resume_normal(now_ms);
+ 262   3              } else if (mrt_event == MRT_EVENT_EXPIRED) {
+ 263   3      #if STC8G1K08_UART_LOG_ENABLE
+ 264   3                  uart1_puts("MNT EXPIRED\r\n");
+ 265   3      #endif
+ 266   3                  /* 租约到期：原子重置心跳和复位状态，恢复启动宽限期 */
+ 267   3                  app_resume_normal(now_ms);
+ 268   3              }
+ 269   2      
+ 270   2              if (mrt_event == MRT_EVENT_EXIT || mrt_event == MRT_EVENT_EXPIRED) {
+ 271   3                  wdt_clear();
+ 272   3                  continue;
+ 273   3              }
+ 274   2      
+ 275   2              /* 维护模式：AP_RESET 保持高阻，跳过复位逻辑 */
+ 276   2              if (mrt_mode == MRT_MODE_MAINTENANCE) {
+ 277   3                  if (g_reset_output_active != 0U) {
+ 278   4                      apply_reset_output(0U);
+ 279   4                  }
+ 280   3                  wdt_clear();
+ 281   3      #if STC8G1K08_UART_LOG_ENABLE
+ 282   3                  if ((heartbeat_monitor_ms_t)(now_ms - last_report) >= 1000UL) {
+ 283   4                      last_report = now_ms;
+ 284   4                      uart1_puts("MNT mode=maintenance edges=");
+ 285   4                      uart1_put_u32(heartbeat.edge_count);
+ 286   4                      uart1_puts("\r\n");
+ 287   4                  }
+ 288   3      #endif
+ 289   3                  continue;
+ 290   3              }
+ 291   2      
+ 292   2              /* 正常监控模式：执行复位逻辑 */
+ 293   2              heartbeat_status = heartbeat_monitor_status(
+ 294   2                  &heartbeat, now_ms, RESET_HEARTBEAT_GRACE_MS,
+ 295   2                  HEARTBEAT_MONITOR_TIMEOUT_MS);
+ 296   2              reset_controller_update(&g_reset_controller, heartbeat_status,
+ 297   2                                      now_ms, AP_RESET_PULSE_MS);
+ 298   2              apply_reset_output(
+ 299   2                  reset_controller_output_active(&g_reset_controller));
+ 300   2              wdt_clear();
+ 301   2      #if STC8G1K08_UART_LOG_ENABLE
+ 302   2              if ((heartbeat_monitor_ms_t)(now_ms - last_report) >= 1000UL) {
+C51 COMPILER V9.54   MAIN                                                                  08/21/2026 10:55:33 PAGE 6   
+
+ 303   3                  last_report = now_ms;
+ 304   3                  app_report(&heartbeat, now_ms);
+ 305   3              }
+ 306   2      #endif
+ 307   2          }
+ 308   1      }
+ 309          void main(void)
+ 310          {
+ 311   1          app_init();
+ 312   1          app_run();
+ 313   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1306    ----
+   CONSTANT SIZE    =    419    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     32      63
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

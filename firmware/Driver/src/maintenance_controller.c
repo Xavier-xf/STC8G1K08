@@ -1,4 +1,5 @@
 #include "maintenance_controller.h"
+#ifdef MAINTENANCE_CONTROLLER_HOST_TEST
 
 static const char *maintenance_skip_spaces(const char *text)
 {
@@ -105,6 +106,7 @@ maintenance_parse_result_t maintenance_controller_parse_line(
     }
     return MAINTENANCE_PARSE_UNKNOWN_COMMAND;
 }
+#endif
 
 static maintenance_controller_ms_t maintenance_elapsed(
     maintenance_controller_ms_t now_ms,
@@ -184,6 +186,10 @@ maintenance_controller_action_t maintenance_controller_execute(
         return MAINTENANCE_ACTION_RENEWED;
     }
     if (command->type == MAINTENANCE_COMMAND_EXIT) {
+        if (controller->mode != MAINTENANCE_MODE_MAINTENANCE) {
+            maintenance_set_error(error, MAINTENANCE_ERROR_NOT_ACTIVE);
+            return MAINTENANCE_ACTION_REJECTED;
+        }
         controller->mode = MAINTENANCE_MODE_NORMAL;
         controller->started_at_ms = now_ms;
         controller->lease_ms = 0UL;
@@ -216,6 +222,7 @@ maintenance_mode_t maintenance_controller_mode(
     return controller->mode;
 }
 
+#ifdef MAINTENANCE_CONTROLLER_HOST_TEST
 maintenance_controller_ms_t maintenance_controller_remaining_ms(
     const maintenance_controller_t *controller,
     maintenance_controller_ms_t now_ms)
@@ -229,3 +236,4 @@ maintenance_controller_ms_t maintenance_controller_remaining_ms(
     if (elapsed >= controller->lease_ms) return 0UL;
     return controller->lease_ms - elapsed;
 }
+#endif

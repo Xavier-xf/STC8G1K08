@@ -58,20 +58,24 @@ void reset_controller_update(reset_controller_t *controller,
         controller->state = RESET_CONTROLLER_MONITORING;
     }
 }
+#ifdef RESET_CONTROLLER_HOST_TEST
 
 reset_controller_state_t reset_controller_state(const reset_controller_t *controller)
 {
     if (controller == 0) return RESET_CONTROLLER_STARTUP;
     return controller->state;
 }
+#endif
 
 unsigned char reset_controller_output_active(const reset_controller_t *controller)
 {
     return controller != 0 && controller->state == RESET_CONTROLLER_ASSERT;
 }
 
+#ifdef RESET_CONTROLLER_HOST_TEST
 unsigned long reset_controller_reset_count(const reset_controller_t *controller)
 {
     if (controller == 0) return 0UL;
     return controller->reset_count;
 }
+#endif

@@ -1,0 +1,107 @@
+C51 COMPILER V9.54   RESET_CONTROLLER                                                      08/21/2026 10:55:33 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE RESET_CONTROLLER
+OBJECT MODULE PLACED IN .\list\reset_controller.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Driver\src\reset_controller.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User
+                    -;..\Driver\inc) DEBUG OBJECTEXTEND PRINT(.\list\reset_controller.lst) TABS(2) OBJECT(.\list\reset_controller.obj)
+
+line level    source
+
+   1          #include "reset_controller.h"
+   2          
+   3          static heartbeat_monitor_ms_t reset_controller_elapsed(heartbeat_monitor_ms_t now_ms,
+   4                                                                  heartbeat_monitor_ms_t then_ms)
+   5          {
+   6   1          return now_ms - then_ms;
+   7   1      }
+   8          
+   9          static void reset_controller_begin_assert(reset_controller_t *controller,
+  10                                                    heartbeat_monitor_ms_t now_ms)
+  11          {
+  12   1          controller->state = RESET_CONTROLLER_ASSERT;
+  13   1          controller->assert_started_ms = now_ms;
+  14   1          ++controller->reset_count;
+  15   1      }
+  16          
+  17          void reset_controller_init(reset_controller_t *controller,
+  18                                      heartbeat_monitor_ms_t now_ms)
+  19          {
+  20   1          if (controller == 0) return;
+  21   1          controller->state = RESET_CONTROLLER_STARTUP;
+  22   1          controller->assert_started_ms = now_ms;
+  23   1          controller->reset_count = 0UL;
+  24   1      }
+  25          
+  26          void reset_controller_update(reset_controller_t *controller,
+  27                                       heartbeat_monitor_status_t heartbeat_status,
+  28                                       heartbeat_monitor_ms_t now_ms,
+  29                                       heartbeat_monitor_ms_t pulse_ms)
+  30          {
+  31   1          if (controller == 0) return;
+  32   1      
+  33   1          if (controller->state == RESET_CONTROLLER_STARTUP) {
+  34   2              if (heartbeat_status == HEARTBEAT_MONITOR_HEALTHY) {
+  35   3                  controller->state = RESET_CONTROLLER_MONITORING;
+  36   3              } else if (heartbeat_status == HEARTBEAT_MONITOR_TIMEOUT) {
+  37   3                  reset_controller_begin_assert(controller, now_ms);
+  38   3              }
+  39   2              return;
+  40   2          }
+  41   1      
+  42   1          if (controller->state == RESET_CONTROLLER_MONITORING) {
+  43   2              if (heartbeat_status == HEARTBEAT_MONITOR_TIMEOUT) {
+  44   3                  reset_controller_begin_assert(controller, now_ms);
+  45   3              }
+  46   2              return;
+  47   2          }
+  48   1      
+  49   1          if (controller->state == RESET_CONTROLLER_ASSERT) {
+  50   2              if (reset_controller_elapsed(now_ms, controller->assert_started_ms) >= pulse_ms) {
+  51   3                  controller->state = RESET_CONTROLLER_WAIT_RECOVERY;
+  52   3              }
+  53   2              return;
+  54   2          }
+C51 COMPILER V9.54   RESET_CONTROLLER                                                      08/21/2026 10:55:33 PAGE 2   
+
+  55   1      
+  56   1          if (controller->state == RESET_CONTROLLER_WAIT_RECOVERY &&
+  57   1              heartbeat_status == HEARTBEAT_MONITOR_HEALTHY) {
+  58   2              controller->state = RESET_CONTROLLER_MONITORING;
+  59   2          }
+  60   1      }
+  61          #ifdef RESET_CONTROLLER_HOST_TEST
+              
+              reset_controller_state_t reset_controller_state(const reset_controller_t *controller)
+              {
+                  if (controller == 0) return RESET_CONTROLLER_STARTUP;
+                  return controller->state;
+              }
+              #endif
+  69          
+  70          unsigned char reset_controller_output_active(const reset_controller_t *controller)
+  71          {
+  72   1          return controller != 0 && controller->state == RESET_CONTROLLER_ASSERT;
+  73   1      }
+  74          
+  75          #ifdef RESET_CONTROLLER_HOST_TEST
+              unsigned long reset_controller_reset_count(const reset_controller_t *controller)
+              {
+                  if (controller == 0) return 0UL;
+                  return controller->reset_count;
+              }
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    282    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      24
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -62,8 +62,10 @@ typedef struct {
     maintenance_controller_ms_t lease_ms;
 } maintenance_controller_t;
 
+#ifdef MAINTENANCE_CONTROLLER_HOST_TEST
 maintenance_parse_result_t maintenance_controller_parse_line(
     const char *line, maintenance_command_t *command);
+#endif
 void maintenance_controller_init(maintenance_controller_t *controller,
                                   maintenance_controller_ms_t now_ms);
 maintenance_controller_action_t maintenance_controller_execute(
@@ -75,8 +77,10 @@ unsigned char maintenance_controller_update(maintenance_controller_t *controller
                                              maintenance_controller_ms_t now_ms);
 maintenance_mode_t maintenance_controller_mode(
     const maintenance_controller_t *controller);
+#ifdef MAINTENANCE_CONTROLLER_HOST_TEST
 maintenance_controller_ms_t maintenance_controller_remaining_ms(
     const maintenance_controller_t *controller,
     maintenance_controller_ms_t now_ms);
 
+#endif
 #endif

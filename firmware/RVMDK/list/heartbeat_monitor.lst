@@ -1,0 +1,82 @@
+C51 COMPILER V9.54   HEARTBEAT_MONITOR                                                     08/21/2026 10:55:33 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE HEARTBEAT_MONITOR
+OBJECT MODULE PLACED IN .\list\heartbeat_monitor.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Driver\src\heartbeat_monitor.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\Use
+                    -r;..\Driver\inc) DEBUG OBJECTEXTEND PRINT(.\list\heartbeat_monitor.lst) TABS(2) OBJECT(.\list\heartbeat_monitor.obj)
+
+line level    source
+
+   1          #include "heartbeat_monitor.h"
+   2          
+   3          static heartbeat_monitor_ms_t heartbeat_monitor_elapsed(heartbeat_monitor_ms_t now_ms,
+   4                                                                  heartbeat_monitor_ms_t then_ms)
+   5          {
+   6   1          return now_ms - then_ms;
+   7   1      }
+   8          
+   9          void heartbeat_monitor_init(heartbeat_monitor_t *monitor, heartbeat_monitor_ms_t now_ms)
+  10          {
+  11   1          if (monitor == 0) return;
+  12   1          monitor->started_at_ms = now_ms;
+  13   1          monitor->last_edge_ms = now_ms;
+  14   1          monitor->edge_count = 0UL;
+  15   1          monitor->edge_seen = 0U;
+  16   1      }
+  17          
+  18          void heartbeat_monitor_on_falling_edge(heartbeat_monitor_t *monitor,
+  19                                                 heartbeat_monitor_ms_t now_ms)
+  20          {
+  21   1          if (monitor == 0) return;
+  22   1          monitor->last_edge_ms = now_ms;
+  23   1          ++monitor->edge_count;
+  24   1          monitor->edge_seen = 1U;
+  25   1      }
+  26          
+  27          heartbeat_monitor_status_t heartbeat_monitor_status(const heartbeat_monitor_t *monitor,
+  28                                                              heartbeat_monitor_ms_t now_ms,
+  29                                                              heartbeat_monitor_ms_t grace_ms,
+  30                                                              heartbeat_monitor_ms_t timeout_ms)
+  31          {
+  32   1          if (monitor == 0) return HEARTBEAT_MONITOR_TIMEOUT;
+  33   1          if (heartbeat_monitor_elapsed(now_ms, monitor->started_at_ms) < grace_ms) {
+  34   2              return HEARTBEAT_MONITOR_STARTUP;
+  35   2          }
+  36   1          if (!monitor->edge_seen ||
+  37   1              heartbeat_monitor_elapsed(now_ms, monitor->last_edge_ms) >= timeout_ms) {
+  38   2              return HEARTBEAT_MONITOR_TIMEOUT;
+  39   2          }
+  40   1          return HEARTBEAT_MONITOR_HEALTHY;
+  41   1      }
+  42          
+  43          #ifdef HEARTBEAT_MONITOR_HOST_TEST
+              unsigned long heartbeat_monitor_edge_count(const heartbeat_monitor_t *monitor)
+              {
+                  if (monitor == 0) return 0UL;
+                  return monitor->edge_count;
+              }
+              
+              heartbeat_monitor_ms_t heartbeat_monitor_edge_age_ms(const heartbeat_monitor_t *monitor,
+                                                                    heartbeat_monitor_ms_t now_ms)
+              {
+                  if (monitor == 0) return 0UL;
+                  return heartbeat_monitor_elapsed(now_ms, monitor->last_edge_ms);
+C51 COMPILER V9.54   HEARTBEAT_MONITOR                                                     08/21/2026 10:55:33 PAGE 2   
+
+              }
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    258    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      31
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

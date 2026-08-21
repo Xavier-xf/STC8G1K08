@@ -1,5 +1,93 @@
 # STC8G1K08 CPU_CHECK Monitor Follow-up
 
+## Maintenance Runtime Module Integration (2026-08-20)
+
+Phase 1: [completed] Design and implement compact maintenance_runtime module
+- Created unified P5.4 decoder + maintenance controller in 9 bytes DATA
+- Verified all timing constants match original decoder
+- Passed 8 host tests including edge cases and overflow handling
+
+Phase 2: [completed] Integrate into main.c following v1.0.3 pattern
+- Added `maintenance_runtime_t g_maintenance_runtime` to DATA
+- Called `maintenance_runtime_init()` in setup
+- Updated INT2 ISR to call decoder after heartbeat update
+- Poll in main loop and handle ENTER/EXIT/EXPIRED events
+- Maintain AP_RESET high-Z during maintenance mode
+
+Phase 3: [completed] Static checks and Keil build verification
+- ✅ `reset_firmware_static_test.sh` passed
+- ✅ All host tests passed (maintenance_runtime, heartbeat, reset_controller)
+- ✅ Updated Keil project to include `maintenance_runtime.c`
+- ✅ Version updated to 1.0.4
+- ✅ Windows Keil rebuild: `data=122 xdata=0 code=2879, 0 Error(s), 2 Warning(s)`
+- ✅ Generated `stc8g1k08_reset.hex`
+- ⚠️ UART logging disabled to fit DATA limit (core functions preserved)
+
+Phase 4: [pending] Board validation
+- Verify P5.4 ENTER/EXIT commands work
+- Confirm lease expiry restores monitoring
+- Test power-loss and reset recovery
+
+## Confirmed Cause and P5.4 Reintroduction Requirement (2026-08-20)
+
+- The original P5.4 maintenance integration exceeded the C51 Small-model DATA
+  limit. The observed linker progression was `data=216`, then `195`, then `147`
+  with a remaining `?DT?MAIN` overflow.
+- To obtain a linkable image, the millisecond counter and reset-decision scratch
+  values were moved to XDATA and the decision was assembled from separate
+  time/status/report snapshots.
+- In that v1.0.2 path, AP_RESET asserted about 407 ms after a `healthy` report
+  with `age_ms=185`, although the configured timeout was 5000 ms.
+- `reset_controller_update()` can assert only after receiving
+  `HEARTBEAT_MONITOR_TIMEOUT`; the false AP_RESET therefore came from an
+  erroneous timeout entering the reset-decision path, not a real heartbeat loss,
+  WDT reset, or a P5.5 hardware event.
+- v1.0.3 restored the DATA timer and one atomic heartbeat snapshot. It ran over
+  one hour without a false reset, then performed the intentional 5-second
+  timeout/reset/recovery exactly once as designed.
+
+### Required Next Delivery
+
+- Reintroduce the P5.4 ENTER/RENEW/EXIT maintenance protocol.
+- Keep `g_millisecond`, heartbeat state, reset-controller state, and every
+  AP_RESET decision value on the v1.0.3 DATA/local single-snapshot path.
+- On every INT2 edge, update the heartbeat before the P5.4 decoder observes it;
+  protocol parsing must never filter, delay, or revoke a heartbeat edge.
+- If DATA is insufficient, only protocol-only storage may use XDATA. Never move
+  reset-decision state or reconstruct it through XDATA split snapshots.
+
+## v1.0.3 A/B: Restore d092781 Snapshot Path (2026-08-20)
+
+Goal: isolate the remaining behavioral difference from `d092781` without
+changing reset timing, UART diagnostics, WDT, project linkage, or V853.
+
+| Phase | Status | Verification |
+| --- | --- | --- |
+| 1. Establish 1.0.3 static RED contract | completed | 1.0.2 failed on version and missing snapshot |
+| 2. Restore DATA timebase and one heartbeat snapshot | completed | `main.c` follows the approved local snapshot path |
+| 3. Source-level regression checks | completed | Static and four host logic tests pass |
+| 4. Keil build and board A/B | in_progress | Keil passed; 30-minute field run has no false AP-RESET |
+
+### Fixed A/B Boundary
+
+- Keep 30 s startup grace, 5 s timeout, 200 ms AP-RESET pulse, WDT, UART TX
+  logs, and direct INT2 edge recording.
+- Do not compile or invoke P5.4 decoder or maintenance controller.
+- Restore `g_millisecond` to DATA and acquire timer plus heartbeat data in one
+  short `EA=0` snapshot.
+- Use `1.0.3` only to identify this image in field logs.
+
+## v1.0.2 诊断基线恢复（2026-08-20）
+
+目标：撤销未完成的决策快照诊断改动，恢复 v1.0.2 周期打印基线，以便在不改变判断路径的前提下继续定位误 AP_RESET。
+
+| 阶段 | 状态 | 验证 |
+| --- | --- | --- |
+| 1. 恢复静态验收并建立失败基线 | 已完成 | 静态检查先因残留决策快照失败 |
+| 2. 恢复 `main.c` 周期打印主循环 | 已完成 | 决策快照符号已清除 |
+| 3. 清理已撤销设计的文档记录 | 已完成 | 仅移除本轮设计条目 |
+| 4. 回归验证 | 已完成 | 静态检查、逻辑测试和差异检查通过 |
+
 ## Goal
 
 Finish the monitor-only STC8G1K08 delivery: document the independent Keil project and board test procedure while preserving the no-reset safety boundary.
@@ -61,3 +149,50 @@ Finish the monitor-only STC8G1K08 delivery: document the independent Keil projec
 2. [completed] Replace full `heartbeat_monitor_t` snapshots with short atomic scalar snapshots for state, edge count, and edge age.
 3. [completed] Run host/static regression checks.
 4. [completed] Rebuild `STC8G1K08-RESET` in Windows Keil and confirm no DATA overflow.
+
+## P5.4 Single-Wire Maintenance Design (2026-08-19)
+
+### Goal
+
+Assess a replacement for the temporarily problematic UART maintenance command
+path. The candidate uses the existing V853 PH15 -> STC P5.4/INT2 CPU_CHECK wire
+as a **unidirectional digital** command channel while retaining hardware safety.
+This phase is design-only: no source, Keil project, timing configuration, or
+application behavior is changed until the protocol is reviewed and approved.
+
+### Phases
+
+1. [completed] Reconfirm the P5.4 electrical connection and existing heartbeat timing from the V853 schematic and current sources.
+2. [completed] Compare P5.4 pulse-frame, UART-only, and separate-wire alternatives; explicitly identify safety and false-trigger risks.
+3. [completed] Publish the recommended frame, state machine, timing constants, UART disable boundary, and acceptance tests for review.
+
+## P5.4 Single-Wire Maintenance Implementation (2026-08-19)
+
+状态：STC 源码实现和 Linux/V853 配套实现已完成，待 Windows Keil 与现场板测。
+
+1. [completed] 关闭 UART RX/维护命令，保留可重新打开的 TX 源码宏。
+2. [completed] 加入 P5.4 维护帧解码：3 个 payload 脉冲 ENTER，4 个 EXIT。
+3. [completed] 将正常心跳边沿限制为 150..250 ms，并把无心跳保护调整为 5 s。
+4. [completed] 完成 STC 解码器、维护控制器、心跳/复位状态机测试及静态工程检查。
+5. [pending] Keil 0 Error/0 Warning 构建、烧录和现场波形/维护/租约/掉电回归。
+
+### Constraints
+
+- P5.4 remains an STC input driven only by V853 PH15; STC must never drive it.
+- Use digital high/low timing only; do not rely on sine, cosine, amplitude, or other analog waveform recognition.
+- UART RX and UART maintenance parsing must be compile-time disabled in the interim firmware, while preserving the sources for later review.
+- STC WDT continues running in every state; maintenance state remains RAM-only.
+- The existing 30-second boot grace stays unless the reviewed design explicitly changes it.
+
+
+## P5.4 维护帧与 V853 控制面（2026-08-19）
+
+状态：源码实现完成，待板上验证。
+
+- STC 正式固件关闭 UART RX，保留 TX 日志宏（默认关闭），心跳超时为 5 秒。
+- V853 `cpu_check_heartbeat` 创建 `/tmp/kocom_cpu_check.sock`，仅接受严格 `ENTER\\n`，帧完整发送后回复 `SENT\\n`。
+- PH15 由心跳线程和维护帧线程共用同一把锁；进入维护帧前暂停普通心跳，停止时先 join 两个线程再释放 GPIO。
+- `cpu_check_ctl enter` 只走 socket；`renew`/`exit` 在应用停止后直接申请 PH15 发 3/4 脉冲，不能作为 ENTER 兜底。
+- V853 构建、控制工具构建、STC 解码/维护/心跳/复位测试和静态检查已通过。
+
+待现场验证：应用运行时 `cpu_check_ctl enter` 返回 `SENT`、PH15 帧波形、停止应用后 `renew` 续租、`exit` 恢复监控，以及 STC 复位/掉电后保护自动恢复。

@@ -137,8 +137,15 @@ static int test_enter_renew_exit_and_bounds(void)
                          0UL,
                  "EXIT clears the volatile lease");
 
-    command.type = MAINTENANCE_COMMAND_RENEW;
+    command.type = MAINTENANCE_COMMAND_EXIT;
+    ok &= expect(maintenance_controller_execute(&controller, &command, 4000UL,
+                                                 &error) ==
+                     MAINTENANCE_ACTION_REJECTED &&
+                     error == MAINTENANCE_ERROR_NOT_ACTIVE,
+                 "EXIT is rejected outside maintenance");
+
     command.has_lease = 1U;
+    command.type = MAINTENANCE_COMMAND_RENEW;
     command.lease_seconds = 60UL;
     ok &= expect(maintenance_controller_execute(&controller, &command, 3000UL,
                                                  &error) ==

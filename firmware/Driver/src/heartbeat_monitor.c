@@ -40,6 +40,7 @@ heartbeat_monitor_status_t heartbeat_monitor_status(const heartbeat_monitor_t *m
     return HEARTBEAT_MONITOR_HEALTHY;
 }
 
+#ifdef HEARTBEAT_MONITOR_HOST_TEST
 unsigned long heartbeat_monitor_edge_count(const heartbeat_monitor_t *monitor)
 {
     if (monitor == 0) return 0UL;
@@ -52,3 +53,4 @@ heartbeat_monitor_ms_t heartbeat_monitor_edge_age_ms(const heartbeat_monitor_t *
     if (monitor == 0) return 0UL;
     return heartbeat_monitor_elapsed(now_ms, monitor->last_edge_ms);
 }
+#endif

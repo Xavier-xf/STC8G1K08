@@ -1,5 +1,11 @@
 # Progress Log
 
+## Firmware Directory Cleanup (2026-08-22)
+
+- Tasks 1-4 completed without staging or committing: baseline captured, active tests organized, legacy modules and debug files archived, and five approved temporary backups removed.
+- Task 5 documentation alignment and two read-only reviews completed.
+- Task 6 completed: all six active/legacy tests passed, production project/build outputs and historical snapshots were preserved, documentation scans and `git diff --check` passed, and the Git index remains empty.
+
 ## v1.0.4 Keil Build Successful (2026-08-20)
 
 Windows Keil 编译成功！

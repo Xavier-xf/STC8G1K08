@@ -1,5 +1,11 @@
 # STC8G1K08 Monitor Findings
 
+## Firmware Directory Cleanup Findings (2026-08-22)
+
+- The formal Keil project contains `maintenance_runtime.c` and the retained output records `data=112.0 xdata=0 code=4725` with zero errors and warnings.
+- Active tests are under `firmware/tests/host/` and `firmware/tests/static/`; superseded implementations and debug material remain under `firmware/validation/legacy/`.
+- Documentation was stale at 1.0.1/1.0.2 and incorrectly described P5.4 maintenance as disabled; current source and build records show version 1.0.6 with maintenance enabled.
+
 ## v1.0.4 Keil Build Results (2026-08-20)
 
 **编译成功：**

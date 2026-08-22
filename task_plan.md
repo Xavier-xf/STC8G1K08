@@ -1,5 +1,16 @@
 # STC8G1K08 CPU_CHECK Monitor Follow-up
 
+## Firmware Directory Cleanup (2026-08-22)
+
+1. [completed] Capture production project and build baseline.
+2. [completed] Move active host/static tests under `firmware/tests/`.
+3. [completed] Archive superseded protocol implementations under `firmware/validation/legacy/`.
+4. [completed] Archive debug files and remove only the five approved temporary backups.
+5. [completed] Align current firmware documentation with version 1.0.6 and the P5.4 maintenance baseline.
+6. [completed] Run full verification and delivery review.
+
+Constraints: do not stage or commit; preserve production sources, Keil project, SDK files, historical snapshots, and `RVMDK/list` outputs.
+
 ## Maintenance Runtime Module Integration (2026-08-20)
 
 Phase 1: [completed] Design and implement compact maintenance_runtime module

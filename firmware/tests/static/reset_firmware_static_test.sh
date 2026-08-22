@@ -2,17 +2,18 @@
 set -eu
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-reset="$root/User/main.c"
-config="$root/User/Config.h"
-regs="$root/Driver/inc/stc8g1k08_regs.h"
-project="$root/RVMDK/STC8G1K08-RESET.uvproj"
-logic="$root/Driver/src/reset_controller.c"
-uart="$root/Driver/src/uart.c"
-maintenance_runtime="$root/Driver/src/maintenance_runtime.c"
-maintenance_runtime_header="$root/Driver/inc/maintenance_runtime.h"
-heartbeat="$root/Driver/src/heartbeat_monitor.c"
-heartbeat_header="$root/Driver/inc/heartbeat_monitor.h"
-reset_header="$root/Driver/inc/reset_controller.h"
+firmware_root=$(CDPATH= cd -- "$root/../.." && pwd)
+reset="$firmware_root/User/main.c"
+config="$firmware_root/User/Config.h"
+regs="$firmware_root/Driver/inc/stc8g1k08_regs.h"
+project="$firmware_root/RVMDK/STC8G1K08-RESET.uvproj"
+logic="$firmware_root/Driver/src/reset_controller.c"
+uart="$firmware_root/Driver/src/uart.c"
+maintenance_runtime="$firmware_root/Driver/src/maintenance_runtime.c"
+maintenance_runtime_header="$firmware_root/Driver/inc/maintenance_runtime.h"
+heartbeat="$firmware_root/Driver/src/heartbeat_monitor.c"
+heartbeat_header="$firmware_root/Driver/inc/heartbeat_monitor.h"
+reset_header="$firmware_root/Driver/inc/reset_controller.h"
 
 fail() {
     printf '%s\n' "RESET 固件静态检查失败: $1" >&2
@@ -51,8 +52,8 @@ grep -Fq 'void uart1_putc(char value)' "$uart" || fail "缺少 UART TX 接口"
 ! grep -Fq 'g_uart_rx_buffer' "$uart" || fail "UART RX 缓冲仍存在"
 ! grep -Fq 'uart1_read_byte' "$uart" || fail "UART RX API 仍存在"
 ! grep -Fq 'uart1_rx_overflow_take' "$uart" || fail "UART RX 溢出 API 仍存在"
-[ ! -e "$root/RVMDK/STC8G1K08-SMOKE.uvproj" ] || fail "正式工程目录仍包含 SMOKE 工程"
-[ ! -e "$root/RVMDK/STC8G1K08-MONITOR.uvproj" ] || fail "正式工程目录仍包含 MONITOR 工程"
+[ ! -e "$firmware_root/RVMDK/STC8G1K08-SMOKE.uvproj" ] || fail "正式工程目录仍包含 SMOKE 工程"
+[ ! -e "$firmware_root/RVMDK/STC8G1K08-MONITOR.uvproj" ] || fail "正式工程目录仍包含 MONITOR 工程"
 grep -Fq '#define AP_RESET_PULSE_MS 200UL' "$config" || fail "缺少复位脉宽配置"
 grep -Fq '#define RESET_HEARTBEAT_GRACE_MS 30000UL' "$config" || fail "RESET 启动宽限不足"
 grep -Fq '#define WDT_PRESCALE 6U' "$config" || fail "WDT 分频不是 128"

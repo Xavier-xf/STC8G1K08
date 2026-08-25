@@ -6,7 +6,7 @@
  *
  * 设计目标：
  * 1. 只占用很少 DATA（last_edge_ms: 4字节，状态/计数/标志: 1-2字节）
- * 2. 只处理 ENTER/RENEW/EXIT 二进制事件，不解析文本命令
+ * 2. 只处理 START/STOP 二进制事件，不解析文本命令
  * 3. INT2 边沿先记入心跳监控，再交给此解码器
  * 4. 不依赖 XDATA 或复杂结构体
  */
@@ -27,28 +27,20 @@ typedef unsigned long maintenance_runtime_ms_t;
 #define MRT_TRAILER_MIN_MS 500UL
 #define MRT_SYNC_TIMEOUT_MS 600UL
 
-/* 维护模式租约常量 */
-#define MRT_DEFAULT_LEASE_MS 1800000UL  /* 1800秒 = 30分钟 */
-#define MRT_MIN_LEASE_MS 60000UL        /* 60秒 */
-#define MRT_MAX_LEASE_MS 3600000UL      /* 3600秒 = 1小时 */
 
 /*
  * 维护运行时状态。
  *
  * C51 Small 模型的生产 DATA 只有 128 字节。协议只需要比较小于 65 秒
- * 的边沿间隔，租约最长 1 小时，因此生产版不必保存两个完整的 32 位毫秒
- * 时间戳：边沿使用 16 位毫秒模数，租约使用 16 位 256ms tick。
- * 主机测试版保留完整毫秒字段，便于验证回绕和精确租约语义。
+ * 的边沿间隔，因此生产版只保存一个 16 位毫秒模数。
  */
 #ifdef MAINTENANCE_RUNTIME_HOST_TEST
 typedef struct {
     maintenance_runtime_ms_t last_edge_ms;
-    maintenance_runtime_ms_t lease_end_ms;
     unsigned char state;
 #else
 typedef struct {
     unsigned int last_edge_ms;  /* 16 位毫秒模数，仅用于协议间隔 */
-    unsigned int lease_end_ms;  /* 16 位 256ms tick 的截止时刻 */
     unsigned char state;
 #endif
     /*
@@ -56,8 +48,8 @@ typedef struct {
      * bit 0-1: decoder_state (0=IDLE, 1=SYNC, 2=DELIMITER, 3=PAYLOAD)
      * bit 2: have_edge (0=no, 1=yes)
      * bit 3-5: payload_count (0-7)
-     * bit 6: maintenance_active (0=NORMAL, 1=MAINTENANCE)
-     * bit 7: trailer event pending (event type follows maintenance_active)
+     * bit 6: monitor_enabled (0=STOP, 1=START)
+     * bit 7: trailer event pending (event type follows monitor_enabled)
      */
 } maintenance_runtime_t;
 
@@ -65,13 +57,13 @@ typedef struct {
 #define MRT_DECODER_STATE(s) ((s) & 0x03U)
 #define MRT_HAVE_EDGE(s) (((s) >> 2) & 0x01U)
 #define MRT_PAYLOAD_COUNT(s) (((s) >> 3) & 0x07U)
-#define MRT_MAINTENANCE_ACTIVE(s) (((s) >> 6) & 0x01U)
+#define MRT_MONITOR_ENABLED(s) (((s) >> 6) & 0x01U)
 #define MRT_EVENT_PENDING(s) (((s) >> 7) & 0x01U)
 
 #define MRT_SET_DECODER_STATE(s, v) ((s) = ((s) & 0xFCU) | ((v) & 0x03U))
 #define MRT_SET_HAVE_EDGE(s, v) ((s) = ((s) & 0xFBU) | (((v) & 0x01U) << 2))
 #define MRT_SET_PAYLOAD_COUNT(s, v) ((s) = ((s) & 0xC7U) | (((v) & 0x07U) << 3))
-#define MRT_SET_MAINTENANCE_ACTIVE(s, v) ((s) = ((s) & 0xBFU) | (((v) & 0x01U) << 6))
+#define MRT_SET_MONITOR_ENABLED(s, v) ((s) = ((s) & 0xBFU) | (((v) & 0x01U) << 6))
 #define MRT_SET_EVENT_PENDING(s, v) ((s) = ((s) & 0x7FU) | (((v) & 0x01U) << 7))
 
 /* Decoder 状态常量 */
@@ -83,9 +75,9 @@ typedef struct {
 /* 事件类型 */
 typedef unsigned char maintenance_runtime_event_t;
 #define MRT_EVENT_NONE 0U
-#define MRT_EVENT_ENTER 1U
-#define MRT_EVENT_EXIT 2U
-#define MRT_EVENT_EXPIRED 3U
+#define MRT_EVENT_START 1U
+#define MRT_EVENT_STOP 2U
+
 
 /* 模式查询 */
 typedef unsigned char maintenance_runtime_mode_t;
@@ -95,6 +87,10 @@ typedef unsigned char maintenance_runtime_mode_t;
 /* 初始化 */
 void maintenance_runtime_init(maintenance_runtime_t *mrt,
                               maintenance_runtime_ms_t now_ms);
+
+/* Set initial monitor state without generating a protocol event. */
+void maintenance_runtime_set_active(maintenance_runtime_t *mrt,
+                                     unsigned char active);
 
 /* INT2 边沿处理（在心跳监控记录后调用）*/
 void maintenance_runtime_on_falling_edge(maintenance_runtime_t *mrt,
@@ -113,10 +109,6 @@ maintenance_runtime_mode_t maintenance_runtime_mode(
 /* 查询是否在维护模式 */
 unsigned char maintenance_runtime_is_active(const maintenance_runtime_t *mrt);
 
-/* 查询剩余租约时间（仅用于测试和日志） */
-maintenance_runtime_ms_t maintenance_runtime_remaining_ms(
-    const maintenance_runtime_t *mrt,
-    maintenance_runtime_ms_t now_ms);
 #endif
 
 #endif

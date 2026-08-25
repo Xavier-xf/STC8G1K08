@@ -20,6 +20,17 @@ fail() {
     exit 1
 }
 
+require_order() {
+    file=$1
+    first=$2
+    second=$3
+    first_line=$(grep -n -m1 -F "$first" "$file" | cut -d: -f1 || true)
+    second_line=$(grep -n -m1 -F "$second" "$file" | cut -d: -f1 || true)
+    [ -n "$first_line" ] && [ -n "$second_line" ] &&
+        [ "$first_line" -lt "$second_line" ] ||
+        fail "$file 中 $first 必须先于 $second"
+}
+
 [ -f "$reset" ] || fail "缺少 User/main.c"
 [ -f "$config" ] || fail "缺少 User/Config.h"
 [ -f "$regs" ] || fail "缺少 Driver/inc/stc8g1k08_regs.h"
@@ -58,9 +69,17 @@ grep -Fq '#define AP_RESET_PULSE_MS 200UL' "$config" || fail "缺少复位脉宽
 grep -Fq '#define RESET_HEARTBEAT_GRACE_MS 30000UL' "$config" || fail "RESET 启动宽限不足"
 grep -Fq '#define WDT_PRESCALE 6U' "$config" || fail "WDT 分频不是 128"
 grep -Fq 'sfr WDT_CONTR = 0xC1' "$regs" || fail "缺少 WDT_CONTR SFR"
+grep -Fq 'sfr PCON' "$regs" || fail "缺少 PCON 复位原因寄存器"
+grep -Fq '#define WDT_FLAG_MASK 0x80U' "$regs" || fail "缺少 WDT_FLAG 字节掩码定义"
+! grep -Eq 'sbit[[:space:]]+(PCON_POF|PCON_LVDF|WDT_FLAG)[[:space:]]*=' "$regs" ||
+    fail "不可位寻址 SFR 不得声明为 sbit"
 grep -Fq 'P5M1 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 没有高阻释放路径"
 grep -Fq 'P5M0 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 没有复位推挽路径"
 grep -Fq 'WDT_CONTR = (unsigned char)(WDT_PRESCALE | WDT_ENABLE_MASK)' "$reset" || fail "没有启动内部 WDT"
+grep -Fq 'PCON' "$reset" || fail "main.c 未读取 PCON 复位原因"
+grep -Fq 'WDT_CONTR & WDT_FLAG_MASK' "$reset" || fail "main.c 未通过 WDT_FLAG 掩码读取复位原因"
+grep -Fq 'reset_cause' "$reset" || fail "缺少复位原因快照"
+require_order "$reset" 'reset_cause' 'wdt_init()'
 grep -Fq '#include "uart.h"' "$reset" || fail "main.c 未接入 UART 模块"
 grep -Fq '#include "maintenance_runtime.h"' "$reset" || fail "main.c 未接入 maintenance_runtime"
 grep -Fq 'maintenance_runtime_init' "$reset" || fail "未初始化 maintenance_runtime"
@@ -68,9 +87,11 @@ grep -Fq 'maintenance_runtime_on_falling_edge' "$reset" || fail "INT2 未调用 
 grep -Fq 'maintenance_runtime_poll' "$reset" || fail "主循环未轮询维护事件"
 grep -Fq 'static maintenance_runtime_t g_maintenance_runtime;' "$reset" || fail "维护运行时不应放入 XDATA"
 ! grep -Fq 'maintenance_runtime_t xdata g_maintenance_runtime' "$reset" || fail "维护运行时不应放入 XDATA"
-grep -Fq 'MRT_EVENT_ENTER' "$reset" || fail "未处理 ENTER 事件"
-grep -Fq 'MRT_EVENT_EXIT' "$reset" || fail "未处理 EXIT 事件"
-grep -Fq 'MRT_EVENT_EXPIRED' "$reset" || fail "未处理 EXPIRED 事件"
+grep -Fq 'MRT_EVENT_START' "$reset" || fail "未处理 START 事件"
+grep -Fq 'MRT_EVENT_STOP' "$reset" || fail "未处理 STOP 事件"
+! grep -Fq 'MRT_EVENT_ENTER' "$reset" || fail "仍处理 ENTER 事件"
+! grep -Fq 'MRT_EVENT_EXIT' "$reset" || fail "仍处理 EXIT 事件"
+! grep -Fq 'MRT_EVENT_EXPIRED' "$reset" || fail "仍处理 EXPIRED 事件"
 grep -Fq 'MRT_MODE_MAINTENANCE' "$reset" || fail "未检查维护模式"
 ! grep -Fq 'g_command_length' "$reset" || fail "UART 命令缓冲残留"
 ! grep -Fq 'app_poll_commands' "$reset" || fail "UART 命令轮询残留"
@@ -102,7 +123,8 @@ grep -Fq 'heartbeat_monitor_on_falling_edge(&g_heartbeat_monitor, now_ms);' "$re
 grep -Fq 'maintenance_runtime_on_falling_edge(&g_maintenance_runtime, now_ms);' "$reset" || fail "INT2 未在心跳后调用解码器"
 grep -Fq 'maintenance_runtime_snapshot(&mrt_event, &mrt_mode, now_ms);' "$reset" || fail "维护状态轮询未使用临界区快照"
 grep -Fq 'heartbeat_monitor_init(&g_heartbeat_monitor, now_ms);' "$reset" || fail "恢复正常模式未重置心跳宽限"
-grep -Fq 'if (mrt_event == MRT_EVENT_EXIT || mrt_event == MRT_EVENT_EXPIRED)' "$reset" || fail "恢复事件未跳过旧心跳快照"
+grep -Fq 'if (mrt_event == MRT_EVENT_START)' "$reset" || fail "未处理 START 状态切换"
+grep -Fq 'mrt_event == MRT_EVENT_STOP' "$reset" || fail "未处理 STOP 状态切换"
 grep -Fq '#if STC8G1K08_UART_LOG_ENABLE' "$reset" || fail "UART 输出未受编译开关控制"
 grep -Fq 'WDT_CONTR |= WDT_CLEAR_MASK' "$reset" || fail "没有清除内部 WDT"
 grep -Fq 'g_reset_output_active = 0U' "$reset" || fail "上电默认输出不是安全状态"

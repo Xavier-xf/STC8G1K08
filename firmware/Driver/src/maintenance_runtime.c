@@ -4,33 +4,21 @@
 typedef maintenance_runtime_ms_t mrt_interval_t;
 #define MRT_EDGE_ELAPSED(now_ms, then_ms) \
     ((maintenance_runtime_ms_t)((now_ms) - (then_ms)))
-#define MRT_LEASE_DEADLINE(now_ms) \
-    ((maintenance_runtime_ms_t)((now_ms) + MRT_DEFAULT_LEASE_MS))
-#define MRT_LEASE_EXPIRED(mrt, now_ms) \
-    ((maintenance_runtime_ms_t)((now_ms) - (mrt)->lease_end_ms) < 0x80000000UL)
 #else
 typedef unsigned int mrt_interval_t;
-#define MRT_LEASE_TICK_SHIFT 8U
-#define MRT_LEASE_TICK_ROUND 255UL
 #define MRT_EDGE_ELAPSED(now_ms, then_ms) \
     ((unsigned int)((unsigned int)(now_ms) - (unsigned int)(then_ms)))
-#define MRT_LEASE_DEADLINE(now_ms) \
-    ((unsigned int)((unsigned int)((now_ms) >> MRT_LEASE_TICK_SHIFT) + \
-                    (unsigned int)((MRT_DEFAULT_LEASE_MS + MRT_LEASE_TICK_ROUND) >> \
-                                   MRT_LEASE_TICK_SHIFT)))
-#define MRT_LEASE_EXPIRED(mrt, now_ms) \
-    ((unsigned int)((unsigned int)((now_ms) >> MRT_LEASE_TICK_SHIFT) - \
-                    (mrt)->lease_end_ms) < 0x8000U)
 #endif
 
-/* 重置解码器状态（保留 have_edge 和 maintenance_active）*/
+/* 重置解码器状态（保留 have_edge 和 monitor_enabled） */
 static void mrt_decoder_reset(maintenance_runtime_t *mrt)
 {
     unsigned char state = mrt->state;
     MRT_SET_DECODER_STATE(state, MRT_DECODER_IDLE);
     MRT_SET_PAYLOAD_COUNT(state, 0U);
+    MRT_SET_HAVE_EDGE(state, 0U);
     mrt->state = state;
-    /* have_edge 和 maintenance_active 保持不变 */
+    /* 维护开关状态保持不变；下一帧从新的首边沿开始。 */
 }
 
 /* 初始化 */
@@ -39,8 +27,19 @@ void maintenance_runtime_init(maintenance_runtime_t *mrt,
 {
     if (mrt == 0) return;
     mrt->last_edge_ms = now_ms;
-    mrt->lease_end_ms = 0UL;
     mrt->state = 0U;  /* 全部字段初始化为 0 */
+}
+
+void maintenance_runtime_set_active(maintenance_runtime_t *mrt,
+                                     unsigned char active)
+{
+    unsigned char state;
+
+    if (mrt == 0) return;
+    state = mrt->state;
+    MRT_SET_MONITOR_ENABLED(state, active != 0U ? 1U : 0U);
+    MRT_SET_EVENT_PENDING(state, 0U);
+    mrt->state = state;
 }
 
 /* INT2 边沿处理 */
@@ -111,17 +110,16 @@ void maintenance_runtime_on_falling_edge(maintenance_runtime_t *mrt,
          * 错误载荷清掉；主循环稍后通过 poll() 取走事件。
          */
         if (payload_count == 3U) {
-            MRT_SET_MAINTENANCE_ACTIVE(state, 1U);
+            MRT_SET_MONITOR_ENABLED(state, 1U);
             MRT_SET_EVENT_PENDING(state, 1U);
             mrt->state = state;
             mrt_decoder_reset(mrt);
             return;
         }
         if (payload_count == 4U) {
-            MRT_SET_MAINTENANCE_ACTIVE(state, 0U);
+            MRT_SET_MONITOR_ENABLED(state, 0U);
             MRT_SET_EVENT_PENDING(state, 1U);
             mrt->state = state;
-            mrt->lease_end_ms = 0UL;
             mrt_decoder_reset(mrt);
             return;
         }
@@ -148,32 +146,18 @@ maintenance_runtime_event_t maintenance_runtime_poll(
     unsigned char state;
     unsigned char decoder_state;
     unsigned char payload_count;
-    unsigned char maintenance_active;
+    unsigned char monitor_enabled;
 
     if (mrt == 0) return MRT_EVENT_NONE;
 
     state = mrt->state;
-    maintenance_active = MRT_MAINTENANCE_ACTIVE(state);
+    monitor_enabled = MRT_MONITOR_ENABLED(state);
 
     if (MRT_EVENT_PENDING(state) != 0U) {
         MRT_SET_EVENT_PENDING(state, 0U);
         mrt->state = state;
-        if (maintenance_active != 0U) {
-            mrt->lease_end_ms = MRT_LEASE_DEADLINE(now_ms);
-            return MRT_EVENT_ENTER;
-        }
-        return MRT_EVENT_EXIT;
-    }
-
-    /* 检查维护租约到期 */
-    if (maintenance_active != 0U) {
-        if (MRT_LEASE_EXPIRED(mrt, now_ms) != 0U) {
-            /* 租约到期，返回 NORMAL */
-            MRT_SET_MAINTENANCE_ACTIVE(state, 0U);
-            mrt->state = state;
-            mrt->lease_end_ms = 0UL;
-            return MRT_EVENT_EXPIRED;
-        }
+        if (monitor_enabled != 0U) return MRT_EVENT_START;
+        return MRT_EVENT_STOP;
     }
 
     /* 检查解码器状态 */
@@ -189,24 +173,20 @@ maintenance_runtime_event_t maintenance_runtime_poll(
         if (elapsed >= MRT_TRAILER_MIN_MS) {
             payload_count = MRT_PAYLOAD_COUNT(state);
 
-            /* 3 个脉冲 = ENTER/RENEW */
+            /* 3 个脉冲 = START */
             if (payload_count == 3U) {
-                MRT_SET_MAINTENANCE_ACTIVE(state, 1U);
+                MRT_SET_MONITOR_ENABLED(state, 1U);
                 mrt->state = state;
-                mrt->lease_end_ms = MRT_LEASE_DEADLINE(now_ms);
                 mrt_decoder_reset(mrt);
-                return MRT_EVENT_ENTER;
+                return MRT_EVENT_START;
             }
 
-            /* 4 个脉冲 = EXIT */
+            /* 4 个脉冲 = STOP */
             if (payload_count == 4U) {
-                if (maintenance_active != 0U) {
-                    MRT_SET_MAINTENANCE_ACTIVE(state, 0U);
-                    mrt->state = state;
-                    mrt->lease_end_ms = 0UL;
-                }
+                MRT_SET_MONITOR_ENABLED(state, 0U);
+                mrt->state = state;
                 mrt_decoder_reset(mrt);
-                return MRT_EVENT_EXIT;
+                return MRT_EVENT_STOP;
             }
 
             /* 其他脉冲数无效 */
@@ -228,7 +208,7 @@ maintenance_runtime_mode_t maintenance_runtime_mode(
     const maintenance_runtime_t *mrt)
 {
     if (mrt == 0) return MRT_MODE_NORMAL;
-    return MRT_MAINTENANCE_ACTIVE(mrt->state) != 0U
+    return MRT_MONITOR_ENABLED(mrt->state) != 0U
         ? MRT_MODE_MAINTENANCE
         : MRT_MODE_NORMAL;
 }
@@ -238,20 +218,7 @@ maintenance_runtime_mode_t maintenance_runtime_mode(
 unsigned char maintenance_runtime_is_active(const maintenance_runtime_t *mrt)
 {
     if (mrt == 0) return 0U;
-    return MRT_MAINTENANCE_ACTIVE(mrt->state);
+    return MRT_MONITOR_ENABLED(mrt->state);
 }
 
-/* 查询剩余租约时间（仅用于测试）*/
-maintenance_runtime_ms_t maintenance_runtime_remaining_ms(
-    const maintenance_runtime_t *mrt,
-    maintenance_runtime_ms_t now_ms)
-{
-    if (mrt == 0 || MRT_MAINTENANCE_ACTIVE(mrt->state) == 0U) {
-        return 0UL;
-    }
-    if (MRT_LEASE_EXPIRED(mrt, now_ms) != 0U) {
-        return 0UL;
-    }
-    return mrt->lease_end_ms - now_ms;
-}
 #endif

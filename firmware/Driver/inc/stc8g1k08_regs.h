@@ -26,6 +26,7 @@ sfr TH0 = 0x8C;
 sfr TH1 = 0x8D;
 sfr AUXR = 0x8E;
 sfr INT_CLKO = 0x8F;
+sfr PCON = 0x87;
 sfr IE = 0xA8;
 sfr WDT_CONTR = 0xC1;
 
@@ -50,6 +51,11 @@ sbit EA = IE^7;
 /* UART1 发送完成标志 */
 sbit RI = SCON^0;
 sbit TI = SCON^1;
+
+/* Reset-cause masks. These SFRs are not bit-addressable on C51. */
+#define PCON_POF_MASK 0x10U
+#define PCON_LVDF_MASK 0x20U
+#define WDT_FLAG_MASK 0x80U
 
 /*
  * 板级信号定义：

@@ -210,6 +210,18 @@ void int2_isr(void) interrupt 10
 }
 static void app_init(void)
 {
+    unsigned char reset_cause;
+    unsigned char wdt_reset;
+    unsigned char power_or_lvd_reset;
+
+    /* Sample reset cause before wdt_init() rewrites WDT_CONTR. */
+    reset_cause = (unsigned char)((PCON & (PCON_POF_MASK | PCON_LVDF_MASK)) |
+                                  (WDT_CONTR & WDT_FLAG_MASK));
+    PCON &= (unsigned char)~(PCON_POF_MASK | PCON_LVDF_MASK);
+    wdt_reset = (unsigned char)((reset_cause & 0x80U) != 0U);
+    power_or_lvd_reset = (unsigned char)((reset_cause &
+                                          (PCON_POF_MASK | PCON_LVDF_MASK)) != 0U);
+
     gpio_reset_init();
 #if STC8G1K08_UART_LOG_ENABLE
     uart1_init();
@@ -218,6 +230,9 @@ static void app_init(void)
     heartbeat_monitor_init(&g_heartbeat_monitor, 0UL);
     reset_controller_init(&g_reset_controller, 0UL);
     maintenance_runtime_init(&g_maintenance_runtime, 0UL);
+    maintenance_runtime_set_active(&g_maintenance_runtime,
+                                   (unsigned char)(wdt_reset != 0U &&
+                                                   power_or_lvd_reset == 0U));
     g_reset_output_active = 0U;
     INT_CLKO |= INT2_ENABLE_MASK;
     wdt_init();
@@ -249,31 +264,26 @@ static void app_run(void)
         maintenance_runtime_snapshot(&mrt_event, &mrt_mode, now_ms);
 
         /* 处理维护模式事件 */
-        if (mrt_event == MRT_EVENT_ENTER) {
+        if (mrt_event == MRT_EVENT_START) {
 #if STC8G1K08_UART_LOG_ENABLE
-            uart1_puts("MNT ENTER\r\n");
+            uart1_puts("MNT START\r\n");
 #endif
-        } else if (mrt_event == MRT_EVENT_EXIT) {
-#if STC8G1K08_UART_LOG_ENABLE
-            uart1_puts("MNT EXIT\r\n");
-#endif
-            /* 退出维护模式：原子重置心跳和复位状态，恢复启动宽限期 */
+            /* 启动监测时重新开始 30 秒宽限期。 */
             app_resume_normal(now_ms);
-        } else if (mrt_event == MRT_EVENT_EXPIRED) {
+            wdt_clear();
+            continue;
+        } else if (mrt_event == MRT_EVENT_STOP) {
 #if STC8G1K08_UART_LOG_ENABLE
-            uart1_puts("MNT EXPIRED\r\n");
+            uart1_puts("MNT STOP\r\n");
 #endif
-            /* 租约到期：原子重置心跳和复位状态，恢复启动宽限期 */
+            /* 停止监测时保持 AP_RESET 高阻，状态永久保持停止。 */
             app_resume_normal(now_ms);
-        }
-
-        if (mrt_event == MRT_EVENT_EXIT || mrt_event == MRT_EVENT_EXPIRED) {
             wdt_clear();
             continue;
         }
 
-        /* 维护模式：AP_RESET 保持高阻，跳过复位逻辑 */
-        if (mrt_mode == MRT_MODE_MAINTENANCE) {
+        /* 监测停止：AP_RESET 保持高阻，但内部 WDT 继续运行。 */
+        if (mrt_mode != MRT_MODE_MAINTENANCE) {
             if (g_reset_output_active != 0U) {
                 apply_reset_output(0U);
             }
@@ -281,7 +291,7 @@ static void app_run(void)
 #if STC8G1K08_UART_LOG_ENABLE
             if ((heartbeat_monitor_ms_t)(now_ms - last_report) >= 1000UL) {
                 last_report = now_ms;
-                uart1_puts("MNT mode=maintenance edges=");
+                uart1_puts("MNT mode=stopped edges=");
                 uart1_put_u32(heartbeat.edge_count);
                 uart1_puts("\r\n");
             }
@@ -289,7 +299,7 @@ static void app_run(void)
             continue;
         }
 
-        /* 正常监控模式：执行复位逻辑 */
+        /* 监测已启动：执行心跳超时和 AP_RESET 逻辑。 */
         heartbeat_status = heartbeat_monitor_status(
             &heartbeat, now_ms, RESET_HEARTBEAT_GRACE_MS,
             HEARTBEAT_MONITOR_TIMEOUT_MS);

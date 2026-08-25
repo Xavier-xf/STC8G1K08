@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 1   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   52   1              P5 &= (unsigned char)~P5_AP_RESET_MASK;
   53   1      #endif
   54   1          P5M1 &= (unsigned char)~P5_AP_RESET_MASK;
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 2   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 2   
 
   55   1          P5M0 |= P5_AP_RESET_MASK;
   56   1      }
@@ -126,7 +126,7 @@ line level    source
  114   1          *mode = maintenance_runtime_mode(&g_maintenance_runtime);
  115   1          EA = saved_ea;
  116   1      }
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 3   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 3   
 
  117          
  118          static void app_resume_normal(heartbeat_monitor_ms_t now_ms)
@@ -190,7 +190,7 @@ line level    source
  176          #endif
  177          
  178          static void apply_reset_output(unsigned char active)
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 4   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 4   
 
  179          {
  180   1          if (active == g_reset_output_active) return;
@@ -254,7 +254,7 @@ line level    source
  238   1          wdt_init();
  239   1          EA = 1;
  240   1      
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 5   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 5   
 
  241   1      #if STC8G1K08_UART_LOG_ENABLE
  242   1          uart1_puts("\r\nSTC8G1K08 reset firmware v" STC8G1K08_FIRMWARE_VERSION "\r\n");
@@ -318,7 +318,7 @@ line level    source
  300   3              }
  301   2      
  302   2              /* 监测已启动：执行心跳超时和 AP_RESET 逻辑。 */
-C51 COMPILER V9.54   MAIN                                                                  08/24/2026 17:28:16 PAGE 6   
+C51 COMPILER V9.54   MAIN                                                                  08/25/2026 15:34:06 PAGE 6   
 
  303   2              heartbeat_status = heartbeat_monitor_status(
  304   2                  &heartbeat, now_ms, RESET_HEARTBEAT_GRACE_MS,

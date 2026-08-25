@@ -5,7 +5,7 @@
  * 维护运行时 - 精简 P5.4 协议解码与维护模式管理
  *
  * 设计目标：
- * 1. 只占用很少 DATA（last_edge_ms: 4字节，状态/计数/标志: 1-2字节）
+ * 1. 只占用很少 DATA（生产版 last_edge_ms: 2字节，状态/计数/标志: 1字节）
  * 2. 只处理 START/STOP 二进制事件，不解析文本命令
  * 3. INT2 边沿先记入心跳监控，再交给此解码器
  * 4. 不依赖 XDATA 或复杂结构体
@@ -13,7 +13,11 @@
 
 #ifdef MAINTENANCE_RUNTIME_HOST_TEST
 #include <stdint.h>
+#ifdef MAINTENANCE_RUNTIME_HOST_TEST_16BIT
+typedef uint16_t maintenance_runtime_ms_t;
+#else
 typedef uint32_t maintenance_runtime_ms_t;
+#endif
 #else
 typedef unsigned long maintenance_runtime_ms_t;
 #endif

@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22                                                        08/24/2026  17:28:16  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22                                                        08/25/2026  15:34:06  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
@@ -59,7 +59,7 @@ LINK MAP OF MODULE:  .\list\stc8g1k08_reset (MAIN)
             DATA    0008H     0047H     UNIT         _DATA_GROUP_
             DATA    004FH     001EH     UNIT         ?DT?MAIN
             IDATA   006DH     0001H     UNIT         ?STACK
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 2
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 2
 
 
 
@@ -119,7 +119,7 @@ SEGMENT                                            DATA_GROUP
   +--> CALLED SEGMENT                            START    LENGTH
 ----------------------------------------------------------------
 ?PR?INT2_ISR?MAIN                                0008H    0004H
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 3
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 3
 
 
   +--> ?PR?_HEARTBEAT_MONITOR_ON_FALLING_EDG...
@@ -179,7 +179,7 @@ SEGMENT                                            DATA_GROUP
   +--> ?PR?_RESET_CONTROLLER_UPDATE?RESET_CO...
   +--> ?PR?_RESET_CONTROLLER_OUTPUT_ACTIVE?R...
   +--> ?PR?_APP_REPORT?MAIN
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 4
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 4
 
 
 
@@ -239,7 +239,7 @@ SEGMENT                                            DATA_GROUP
 
 
 
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 5
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 5
 
 
 SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
@@ -299,7 +299,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   C:1134H         LINE#         26
   C:1134H         LINE#         27
   C:1134H         LINE#         28
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 6
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 6
 
 
   C:1137H         LINE#         29
@@ -359,7 +359,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   D:0003H         SYMBOL        saved_ea
   -------         ENDDO         
   C:10CEH         LINE#         83
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 7
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 7
 
 
   C:10CEH         LINE#         84
@@ -419,7 +419,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   -------         ENDPROC       _APP_RESUME_NORMAL
   -------         PROC          _HEARTBEAT_STATUS_NAME
   D:0007H         SYMBOL        status
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 8
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 8
 
 
   C:1104H         LINE#         132
@@ -479,7 +479,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   C:0FF4H         LINE#         184
   C:0FF7H         LINE#         185
   C:0FF7H         LINE#         186
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 9
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 9
 
 
   C:0FF9H         LINE#         188
@@ -539,7 +539,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   D:002EH         SYMBOL        mrt_event
   D:002FH         SYMBOL        mrt_mode
   -------         ENDDO         
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 10
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 10
 
 
   C:080BH         LINE#         250
@@ -599,7 +599,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   -------         PROC          L?0011
   -------         ENDPROC       L?0011
   -------         PROC          _HEARTBEAT_MONITOR_ELAPSED
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 11
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 11
 
 
   D:0047H         SYMBOL        now_ms
@@ -659,7 +659,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   D:00A2H         PUBLIC        P_SW1
   D:00A8H         PUBLIC        IE
   C:0003H         PUBLIC        _uart1_putc
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 12
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 12
 
 
   B:0098H.1       PUBLIC        TI
@@ -719,7 +719,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   -------         PROC          _UART1_PUT_U32
   D:0038H         SYMBOL        value
   -------         DO            
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 13
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 13
 
 
   D:003CH         SYMBOL        digits
@@ -779,7 +779,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   -------         ENDPROC       _RESET_CONTROLLER_INIT
   -------         PROC          _RESET_CONTROLLER_UPDATE
   D:0030H         SYMBOL        controller
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 14
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 14
 
 
   D:0033H         SYMBOL        heartbeat_status
@@ -839,7 +839,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   C:1124H         LINE#         17
   C:1127H         LINE#         18
   C:112AH         LINE#         19
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 15
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 15
 
 
   C:112DH         LINE#         20
@@ -899,7 +899,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   C:0559H         LINE#         82
   C:055FH         LINE#         83
   C:0580H         LINE#         84
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 16
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 16
 
 
   C:0580H         LINE#         85
@@ -959,7 +959,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   C:0A8DH         LINE#         151
   C:0A97H         LINE#         153
   C:0AA5H         LINE#         154
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 17
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 17
 
 
   C:0AABH         LINE#         156
@@ -1019,7 +1019,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
 
   -------         MODULE        ?C?CLDOPTR
   C:0165H         PUBLIC        ?C?CLDOPTR
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 18
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 18
 
 
   -------         ENDMOD        ?C?CLDOPTR
@@ -1079,7 +1079,7 @@ SYMBOL TABLE OF MODULE:  .\list\stc8g1k08_reset (MAIN)
   -------         MODULE        ?C?LLDIDATA
   C:03E4H         PUBLIC        ?C?LLDIDATA
   -------         ENDMOD        ?C?LLDIDATA
-BL51 BANKED LINKER/LOCATER V6.22                                                      08/24/2026  17:28:16  PAGE 19
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/25/2026  15:34:06  PAGE 19
 
 
 

@@ -6,7 +6,7 @@
  * 本版按 24 MHz 编译；如果 ISP 使用了其他频率，必须同步修改并重新计算
  * Timer0 的 1 ms 时基和 UART1 的 9600 baud 重载值。
  */
-#define STC8G1K08_FIRMWARE_VERSION "1.0.6"
+#define STC8G1K08_FIRMWARE_VERSION "1.0.7"
 #define STC8G1K08_UART_LOG_ENABLE 1U
 #define MAIN_FOSC 24000000UL
 #define UART_BAUDRATE 9600UL
@@ -15,7 +15,8 @@
 #define HEARTBEAT_MONITOR_TIMEOUT_MS 5000UL
 #define RESET_HEARTBEAT_GRACE_MS 30000UL
 #define INT2_ENABLE_MASK 0x10
-#define AP_RESET_ASSERT_LEVEL 0U
+/* 新电路：P5.5 持续拉低通电，拉高复位，脉冲结束后恢复低电平。 */
+#define AP_RESET_ASSERT_LEVEL 1U
 #define AP_RESET_PULSE_MS 200UL
 #define WDT_ENABLE_MASK 0x20
 #define WDT_CLEAR_MASK 0x10

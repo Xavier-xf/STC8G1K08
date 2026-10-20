@@ -8,8 +8,8 @@
  * STC8G1K08 正式外部复位固件
  *
  * P5.4/INT2 只接收 CPU_CHECK 下降沿。
- * P5.5 默认输入高阻，只有 RESET_ASSERT 状态才驱动 Q23/AP-RESET。
- * 当前 AP_RESET_ASSERT_LEVEL=0 为低有效假设，后续可只改配置宏。
+ * P5.5 初始化为推挽输出：低电平保持通电，高电平触发复位。
+ * 复位脉冲结束、监测停止及启动宽限期间均保持低电平。
  */
 
 #define P5_CPU_CHECK_MASK 0x10
@@ -37,31 +37,33 @@ static void timer0_init(void)
 
 static void ap_reset_release(void)
 {
-    P5M1 |= P5_AP_RESET_MASK;
-    P5M0 &= (unsigned char)~P5_AP_RESET_MASK;
+#if AP_RESET_ASSERT_LEVEL != 0U
+    P5 &= (unsigned char)~P5_AP_RESET_MASK;
+#else
     P5 |= P5_AP_RESET_MASK;
+#endif
 }
 
 static void ap_reset_assert(void)
 {
-    /* 先回到高阻，再预置锁存值，最后切换推挽，避免切换瞬间毛刺。 */
-    ap_reset_release();
-    #if AP_RESET_ASSERT_LEVEL != 0U
-        P5 |= P5_AP_RESET_MASK;
+    /* 始终保持推挽模式，只切换输出电平。 */
+#if AP_RESET_ASSERT_LEVEL != 0U
+    P5 |= P5_AP_RESET_MASK;
 #else
-        P5 &= (unsigned char)~P5_AP_RESET_MASK;
+    P5 &= (unsigned char)~P5_AP_RESET_MASK;
 #endif
-    P5M1 &= (unsigned char)~P5_AP_RESET_MASK;
-    P5M0 |= P5_AP_RESET_MASK;
 }
 
 static void gpio_reset_init(void)
 {
+    /* 先预置通电电平，再切换推挽；运行中不再释放为高阻。 */
+    ap_reset_release();
+    P5M0 |= P5_AP_RESET_MASK;
+    P5M1 &= (unsigned char)~P5_AP_RESET_MASK;
+
     P5M1 |= P5_CPU_CHECK_MASK;
     P5M0 &= (unsigned char)~P5_CPU_CHECK_MASK;
     P5 |= P5_CPU_CHECK_MASK;
-    ap_reset_release();
-
     P3M1 |= P3_UART_RX_MASK;
     P3M0 &= (unsigned char)~P3_UART_RX_MASK;
     P3M1 &= (unsigned char)~P3_UART_TX_MASK;
@@ -168,7 +170,7 @@ static void app_report(const heartbeat_monitor_t *heartbeat,
     uart1_puts(" P55=");
     uart1_putc(AP_RESET_TEST ? '1' : '0');
     uart1_puts(" output=");
-    uart1_puts(g_reset_output_active ? "assert" : "high-z");
+    uart1_puts(g_reset_output_active ? "assert" : "power-on");
     uart1_puts(" resets=");
     uart1_put_u32(g_reset_controller.reset_count);
     uart1_puts(" wdt=on\r\n");
@@ -241,7 +243,7 @@ static void app_init(void)
 #if STC8G1K08_UART_LOG_ENABLE
     uart1_puts("\r\nSTC8G1K08 reset firmware v" STC8G1K08_FIRMWARE_VERSION "\r\n");
     uart1_puts("P54=CPU_CHECK INT2 falling edge\r\n");
-    uart1_puts("P55=AP-RESET controlled pulse, WDT=ON\r\n");
+    uart1_puts("P55=LOW power-on, HIGH reset, WDT=ON\r\n");
     uart1_puts("grace=30000ms timeout=5000ms pulse=200ms wdt=128x\r\n");
 #endif
 }
@@ -276,13 +278,13 @@ static void app_run(void)
 #if STC8G1K08_UART_LOG_ENABLE
             uart1_puts("MNT STOP\r\n");
 #endif
-            /* 停止监测时保持 AP_RESET 高阻，状态永久保持停止。 */
+            /* 停止监测时保持 AP_RESET 低电平通电，状态永久保持停止。 */
             app_resume_normal(now_ms);
             wdt_clear();
             continue;
         }
 
-        /* 监测停止：AP_RESET 保持高阻，但内部 WDT 继续运行。 */
+        /* 监测停止：AP_RESET 保持低电平通电，内部 WDT 继续运行。 */
         if (mrt_mode != MRT_MODE_MAINTENANCE) {
             if (g_reset_output_active != 0U) {
                 apply_reset_output(0U);

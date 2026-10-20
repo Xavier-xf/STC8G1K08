@@ -60,7 +60,7 @@ sbit TI = SCON^1;
 /*
  * 板级信号定义：
  * Pin1/P5.4 是 CPU_CHECK 输入；
- * Pin3/P5.5 是 AP-RESET 控制脚，正式固件仅在复位状态驱动它。
+ * Pin3/P5.5 是 AP-RESET 控制脚，低电平通电，高电平复位，持续推挽驱动。
  */
 sbit CPU_CHECK = P5^4;
 sbit AP_RESET_TEST = P5^5;

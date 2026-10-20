@@ -210,3 +210,18 @@ from the verified DATA/local heartbeat and reset-decision path.
 - 维护运行时状态已从 xdata 改回 DATA，并对主循环轮询加 EA 临界区；EXIT/租约到期会原子重置 heartbeat 和 reset_controller，恢复 30 秒宽限。
 - 短边沿容差由 60..110 ms 放宽到 60..150 ms，避免 Linux nanosleep 轻微抖动让现场 110 ms 边界帧被拒绝。
 - 诊断版本提升为 1.0.5，UART 日志打开；主机测试和静态检查已通过，待用户在 Keil 重新 Rebuild、烧录和查看 MNT ENTER。
+
+## 2026-10-07 新电路输出极性
+
+- 用户明确新电路为 P5.5 拉低才能通电、拉高复位；不能只反转
+  `AP_RESET_ASSERT_LEVEL`，旧 `ap_reset_release()` 的高阻状态也必须移除。
+- `gpio_reset_init()` 先写低电平锁存值，再配置推挽；运行中仅切换电平。
+  `app_resume_normal()` 和停止监测路径必须保持通电而非断开。
+- 原 P5.4 START/STOP 规则不变：冷启动停止监测；仅 WDT 复位且无
+  POR/LVD 标志时自动启用监测。用户本次未要求修改此行为。
+- 尝试读取指引指定的 `../app/doc/V853(26.05.06).pdf`，当前路径不存在；
+  新电路极性依据用户说明，不把旧图或 Q23 名称当作新电路证据。
+- 当前没有可用的 Superpowers/Context Engineering/规划技能接口；
+  按仓库要求维护三份规划文件。未找到 Keil、SDCC 或 Wine 构建环境。
+- 固件只能在 STC 开始执行 GPIO 初始化后主动拉低；芯片复位/ISP
+  阶段的引脚电平由芯片和外部电路决定，必须另做板级验证。

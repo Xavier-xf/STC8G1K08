@@ -207,3 +207,13 @@ application behavior is changed until the protocol is reviewed and approved.
 - V853 构建、控制工具构建、STC 解码/维护/心跳/复位测试和静态检查已通过。
 
 待现场验证：应用运行时 `cpu_check_ctl enter` 返回 `SENT`、PH15 帧波形、停止应用后 `renew` 续租、`exit` 恢复监控，以及 STC 复位/掉电后保护自动恢复。
+
+## 2026-10-07 新电路：低电平通电、高电平复位
+
+范围：只调整当前 P5.5 输出方式和复位极性；不修改 P5.4 协议、
+监测启停规则、30 s 宽限、5 s 超时、200 ms 脉宽及 WDT 行为。
+
+1. [completed] 检查当前配置、GPIO 初始化、输出及 START/STOP 路径。
+2. [completed] v1.0.7：初始化主动拉低并保持推挽，复位拉高，结束恢复低电平。
+3. [completed] 添加真实 GPIO 函数主机测试，现有主机/静态回归全部通过；文档已同步。
+4. [pending] 用户在 Windows Keil Rebuild、烧录并测量新板上电/复位波形。

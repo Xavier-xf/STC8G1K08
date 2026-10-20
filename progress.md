@@ -209,3 +209,22 @@ Phase 1-3 已完成，固件已集成 `maintenance_runtime` 模块：
 - 已确认当前现场波形的下降沿间隔与协议匹配；修复 DATA/XDATA 协议状态访问、主循环临界区、租约回绕和恢复宽限。
 - 新增现场 ENTER 波形回归测试，并将短脉冲上限设为 150 ms。
 - 版本为 1.0.5，日志打开；必须确认 Keil map 包含 maintenance_runtime.obj 后再烧录。
+
+## 2026-10-07 新电路适配
+
+- 已将版本提升为 1.0.7，P5.5 初始化主动拉低并保持推挽；
+  复位时拉高，200 ms 后拉低；START/STOP 和恢复路径不再释放为高阻。
+- 已更新输出日志、寄存器说明和静态检查；现有心跳、复位控制器、
+  维护 START/STOP 与 16 位回绕测试均通过。
+- 已补充真实 GPIO 函数的主机回归及 README/新电路板测说明。
+- 未修改原有 Keil 工程配置、ISP 程序及用户删除的 `.orig` 文件。
+- 沙箱因 `bwrap: loopback: Failed RTM_NEWADDR` 无法启动；
+  检查和测试通过已授权的沙箱外执行完成。
+- 最终通过：`reset_firmware_static_test.sh`、`run_ap_reset_output_test.sh`、
+  `run_heartbeat_monitor_test.sh`、`run_reset_controller_test.sh`、
+  `run_maintenance_runtime_test.sh`（含 16 位回绕）、脚本语法检查和
+  `git diff --check`。
+- 在 `/tmp` 副本中将 GPIO 实现替换为旧版，即使配置已设高有效，
+  新测试仍在输出断言处按预期失败，确认能检出旧高阻释放行为。
+- 本机未找到 C51/UV4、SDCC、Wine，未执行 Keil 构建，未更新 HEX；
+  用户需 Rebuild 后烧录 v1.0.7 并完成上电/200 ms 复位的电气测量。

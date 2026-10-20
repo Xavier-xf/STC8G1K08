@@ -51,8 +51,8 @@ grep -Fq '<FilePath>..\User\main.c</FilePath>' "$project" || fail "工程未引�
 grep -Fq '<FilePath>..\Driver\src\heartbeat_monitor.c</FilePath>' "$project" || fail "工程未引用心跳状态模块"
 grep -Fq '<FilePath>..\Driver\src\reset_controller.c</FilePath>' "$project" || fail "工程未引用复位状态模块"
 
-grep -Fq '#define AP_RESET_ASSERT_LEVEL 0U' "$config" || fail "缺少复位极性配置"
-grep -Fq '#define STC8G1K08_FIRMWARE_VERSION "1.0.6"' "$config" || fail "版本应为 1.0.6（含 trailer 事件锁存）"
+grep -Fq '#define AP_RESET_ASSERT_LEVEL 1U' "$config" || fail "新电路必须使用高电平复位"
+grep -Fq '#define STC8G1K08_FIRMWARE_VERSION "1.0.7"' "$config" || fail "版本应为 1.0.7（低电平通电、高电平复位）"
 grep -Fq 'STC8G1K08 reset firmware v' "$reset" || fail "启动横幅未包含固件版本"
 grep -Eq '#define STC8G1K08_UART_LOG_ENABLE [01]U' "$config" || fail "UART 日志开关缺失"
 grep -Fq '#define HEARTBEAT_MONITOR_TIMEOUT_MS 5000UL' "$config" || fail "心跳超时不是 5 秒"
@@ -73,8 +73,11 @@ grep -Fq 'sfr PCON' "$regs" || fail "缺少 PCON 复位原因寄存器"
 grep -Fq '#define WDT_FLAG_MASK 0x80U' "$regs" || fail "缺少 WDT_FLAG 字节掩码定义"
 ! grep -Eq 'sbit[[:space:]]+(PCON_POF|PCON_LVDF|WDT_FLAG)[[:space:]]*=' "$regs" ||
     fail "不可位寻址 SFR 不得声明为 sbit"
-grep -Fq 'P5M1 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 没有高阻释放路径"
-grep -Fq 'P5M0 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 没有复位推挽路径"
+! grep -Fq 'P5M1 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 不得释放为高阻"
+grep -Fq 'P5M1 &= (unsigned char)~P5_AP_RESET_MASK' "$reset" || fail "P5.5 未清除输入模式"
+grep -Fq 'P5M0 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 未配置推挽输出"
+require_order "$reset" 'ap_reset_release();' 'P5M0 |= P5_AP_RESET_MASK'
+require_order "$reset" 'P5M0 |= P5_AP_RESET_MASK' 'P5M1 &= (unsigned char)~P5_AP_RESET_MASK'
 grep -Fq 'WDT_CONTR = (unsigned char)(WDT_PRESCALE | WDT_ENABLE_MASK)' "$reset" || fail "没有启动内部 WDT"
 grep -Fq 'PCON' "$reset" || fail "main.c 未读取 PCON 复位原因"
 grep -Fq 'WDT_CONTR & WDT_FLAG_MASK' "$reset" || fail "main.c 未通过 WDT_FLAG 掩码读取复位原因"

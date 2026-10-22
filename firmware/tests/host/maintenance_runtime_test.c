@@ -1,299 +1,191 @@
 #include "maintenance_runtime.h"
-
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#define TEST(name) static void test_##name(void)
-#define RUN_TEST(name) do { \
-    printf("Running %s...\n", #name); \
-    test_##name(); \
-    printf("  PASSED\n"); \
-} while (0)
+unsigned char P5, P5M0, P5M1;
+static uint32_t clock_ms;
+static uint32_t falling_edges[43];
+static unsigned int edge_count;
+static unsigned int accepted_heartbeats;
 
-/* Emit one P5.4 frame using the production timing windows. */
-static maintenance_runtime_event_t emit_frame(maintenance_runtime_t *mrt,
-                                              maintenance_runtime_ms_t start,
-                                              unsigned int pulses)
+static unsigned char crc8(const unsigned char *bytes, unsigned int size)
 {
-    unsigned int pulse;
-
-    maintenance_runtime_on_falling_edge(mrt, start);
-    maintenance_runtime_on_falling_edge(mrt, start + 900UL);
-    maintenance_runtime_on_falling_edge(mrt, start + 1030UL);
-    maintenance_runtime_on_falling_edge(mrt, start + 1310UL);
-    for (pulse = 0U; pulse < pulses; ++pulse) {
-        maintenance_runtime_on_falling_edge(
-            mrt, start + 1450UL + pulse * 120UL);
+    unsigned char crc = 0;
+    unsigned int i, shift;
+    for (i = 0; i < size; ++i) {
+        crc ^= bytes[i];
+        for (shift = 0; shift < 8; ++shift)
+            crc = (unsigned char)((crc & 0x80U) ? ((unsigned int)crc << 1) ^ 0x07U : (unsigned int)crc << 1);
     }
-    return maintenance_runtime_poll(
-        mrt, start + 1450UL + pulses * 120UL + 500UL);
+    return crc;
 }
 
-/* Emit a frame with independently selected protocol intervals. */
-static maintenance_runtime_event_t emit_frame_with_timing(
-    maintenance_runtime_t *mrt,
-    maintenance_runtime_ms_t start,
-    unsigned long break_ms,
-    unsigned long sync_ms,
-    unsigned long delimiter_ms,
-    unsigned long payload_slot_ms,
-    unsigned long trailer_ms,
-    unsigned int pulses)
+static int line_high(void)
 {
-    unsigned int pulse;
-    maintenance_runtime_ms_t edge;
-
-    edge = start;
-    maintenance_runtime_on_falling_edge(mrt, edge);
-    edge = (maintenance_runtime_ms_t)(edge + break_ms);
-    maintenance_runtime_on_falling_edge(mrt, edge);
-    edge = (maintenance_runtime_ms_t)(edge + sync_ms);
-    maintenance_runtime_on_falling_edge(mrt, edge);
-    edge = (maintenance_runtime_ms_t)(edge + delimiter_ms);
-    maintenance_runtime_on_falling_edge(mrt, edge);
-    for (pulse = 0U; pulse < pulses; ++pulse) {
-        edge = (maintenance_runtime_ms_t)(edge + payload_slot_ms);
-        maintenance_runtime_on_falling_edge(mrt, edge);
+    /* High means input/high-Z release, never a push-pull or driven-high mode. */
+    assert((P5M1 & 0x10U) != 0U);
+    if (P5M0 & 0x10U) {
+        assert((P5 & 0x10U) == 0U);
+        return 0;
     }
-    edge = (maintenance_runtime_ms_t)(edge + trailer_ms);
-    return maintenance_runtime_poll(mrt, edge);
+    assert((P5 & 0x10U) != 0U);
+    return 1;
 }
 
-static maintenance_runtime_event_t emit_timed_start(
-    maintenance_runtime_t *mrt,
-    unsigned long break_ms,
-    unsigned long sync_ms,
-    unsigned long delimiter_ms,
-    unsigned long payload_slot_ms,
-    unsigned long trailer_ms)
+static void advance(unsigned int duration)
 {
-    return emit_frame_with_timing(mrt, 0UL, break_ms, sync_ms,
-                                  delimiter_ms, payload_slot_ms,
-                                  trailer_ms, 3U);
-}
-
-TEST(rejects_break_below_minimum)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_timed_start(&mrt, 749UL, 60UL, 240UL, 60UL, 500UL) ==
-           MRT_EVENT_NONE);
-}
-
-TEST(accepts_break_at_minimum)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_timed_start(&mrt, 750UL, 60UL, 240UL, 60UL, 500UL) ==
-           MRT_EVENT_START);
-}
-
-TEST(rejects_sync_outside_window)
-{
-    static const unsigned long values[] = {59UL, 151UL};
-    unsigned int index;
-
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
-
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, values[index], 240UL,
-                                60UL, 500UL) == MRT_EVENT_NONE);
+    while (duration--) {
+        int before = line_high();
+        ++clock_ms;
+        maintenance_runtime_tick();
+        assert((P5 & 0x20U) == 0);
+        assert((P5M0 & 0x20U) != 0);
+        assert((P5M1 & 0x20U) == 0);
+        if (before && !line_high()) {
+            assert(edge_count < sizeof(falling_edges) / sizeof(falling_edges[0]));
+            falling_edges[edge_count++] = clock_ms;
+            assert(maintenance_runtime_on_falling_edge((uint16_t)clock_ms) == 0);
+        }
     }
 }
 
-TEST(accepts_sync_window_edges)
+static unsigned int host_edge(unsigned int interval)
 {
-    static const unsigned long values[] = {60UL, 150UL};
-    unsigned int index;
+    unsigned int age;
+    advance(interval);
+    age = maintenance_runtime_on_falling_edge((uint16_t)clock_ms);
+    if (age) ++accepted_heartbeats;
+    return age;
+}
 
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
+static void setup(uint32_t start)
+{
+    P5 = 0;
+    P5M0 = 0x20U;
+    P5M1 = 0;
+    clock_ms = start;
+    edge_count = 0;
+    accepted_heartbeats = 0;
+    maintenance_runtime_init();
+    assert(line_high());
+}
 
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, values[index], 240UL,
-                                60UL, 500UL) == MRT_EVENT_START);
+static void request(unsigned char command, unsigned char sequence, int corrupt)
+{
+    unsigned char bytes[3] = {command, sequence, 0};
+    unsigned int i, shift;
+    bytes[2] = crc8(bytes, 2);
+    if (corrupt) bytes[2] ^= 1U;
+    (void)host_edge(20);
+    assert(host_edge(400) == 0);
+    assert(host_edge(32) == 0);
+    for (i = 0; i < sizeof(bytes); ++i)
+        for (shift = 0; shift < 8; ++shift)
+            assert(host_edge((bytes[i] & (0x80U >> shift)) ? 14 : 8) == 0);
+}
+
+static void expect_reply(unsigned char command, unsigned char sequence,
+                         unsigned char result, unsigned char status)
+{
+    unsigned char decoded[5] = {0};
+    unsigned int i;
+    uint32_t start = clock_ms;
+    edge_count = 0;
+    maintenance_runtime_reply(result, status);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
+    advance(99);
+    assert(edge_count == 0);
+    advance(1500);
+    assert(edge_count == 43 && line_high());
+    assert(falling_edges[0] - start == 100);
+    assert(falling_edges[1] - falling_edges[0] == 400);
+    assert(falling_edges[2] - falling_edges[1] == 32);
+    for (i = 0; i < 40; ++i) {
+        uint32_t interval = falling_edges[i + 3] - falling_edges[i + 2];
+        assert(interval == 8 || interval == 14);
+        decoded[i / 8] = (unsigned char)((decoded[i / 8] << 1) | (interval == 14));
     }
-}
-
-TEST(rejects_delimiter_outside_window)
-{
-    static const unsigned long values[] = {239UL, 361UL};
-    unsigned int index;
-
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
-
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, 60UL, values[index],
-                                60UL, 500UL) == MRT_EVENT_NONE);
-    }
-}
-
-TEST(accepts_delimiter_window_edges)
-{
-    static const unsigned long values[] = {240UL, 360UL};
-    unsigned int index;
-
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
-
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, 60UL, values[index],
-                                60UL, 500UL) == MRT_EVENT_START);
-    }
-}
-
-TEST(rejects_payload_slot_outside_window)
-{
-    static const unsigned long values[] = {59UL, 151UL};
-    unsigned int index;
-
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
-
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, 60UL, 240UL,
-                                values[index], 500UL) == MRT_EVENT_NONE);
-    }
-}
-
-TEST(accepts_payload_slot_window_edges)
-{
-    static const unsigned long values[] = {60UL, 150UL};
-    unsigned int index;
-
-    for (index = 0U; index < sizeof(values) / sizeof(values[0]); ++index) {
-        maintenance_runtime_t mrt;
-
-        maintenance_runtime_init(&mrt, 0UL);
-        assert(emit_timed_start(&mrt, 750UL, 60UL, 240UL,
-                                values[index], 500UL) == MRT_EVENT_START);
-    }
-}
-
-TEST(rejects_trailer_below_minimum)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_timed_start(&mrt, 750UL, 60UL, 240UL, 60UL, 499UL) ==
-           MRT_EVENT_NONE);
-}
-
-TEST(accepts_trailer_at_minimum)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_timed_start(&mrt, 750UL, 60UL, 240UL, 60UL, 500UL) ==
-           MRT_EVENT_START);
-}
-
-TEST(cold_start_disabled)
-{
-    maintenance_runtime_t mrt;
-
-    memset(&mrt, 0xFF, sizeof(mrt));
-    maintenance_runtime_init(&mrt, 1000UL);
-    assert(maintenance_runtime_mode(&mrt) == MRT_MODE_NORMAL);
-    assert(maintenance_runtime_is_active(&mrt) == 0U);
-}
-
-TEST(start_three_pulses_enables_monitor)
-{
-    maintenance_runtime_t mrt;
-    maintenance_runtime_event_t event;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    event = emit_frame(&mrt, 0UL, 3U);
-    assert(event == MRT_EVENT_START);
-    assert(maintenance_runtime_is_active(&mrt) == 1U);
-    assert(maintenance_runtime_mode(&mrt) == MRT_MODE_MAINTENANCE);
-}
-
-TEST(start_is_idempotent)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_frame(&mrt, 0UL, 3U) == MRT_EVENT_START);
-    assert(emit_frame(&mrt, 3000UL, 3U) == MRT_EVENT_START);
-    assert(maintenance_runtime_is_active(&mrt) == 1U);
-}
-
-TEST(stop_four_pulses_disables_monitor)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_frame(&mrt, 0UL, 3U) == MRT_EVENT_START);
-    assert(emit_frame(&mrt, 3000UL, 4U) == MRT_EVENT_STOP);
-    assert(maintenance_runtime_is_active(&mrt) == 0U);
-    assert(maintenance_runtime_mode(&mrt) == MRT_MODE_NORMAL);
-}
-
-TEST(stop_is_idempotent)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_frame(&mrt, 0UL, 4U) == MRT_EVENT_STOP);
-    assert(maintenance_runtime_is_active(&mrt) == 0U);
-    assert(emit_frame(&mrt, 3000UL, 4U) == MRT_EVENT_STOP);
-    assert(maintenance_runtime_is_active(&mrt) == 0U);
-}
-
-TEST(stop_is_permanent_and_has_no_lease_expiry)
-{
-    maintenance_runtime_t mrt;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    assert(emit_frame(&mrt, 0UL, 3U) == MRT_EVENT_START);
-    assert(emit_frame(&mrt, 3000UL, 4U) == MRT_EVENT_STOP);
-
-    /* A stopped monitor must remain stopped well past the old 30-minute lease. */
-    assert(maintenance_runtime_poll(&mrt, 1803000UL) == MRT_EVENT_NONE);
-    assert(maintenance_runtime_is_active(&mrt) == 0U);
-}
-
-TEST(normal_heartbeat_is_ignored)
-{
-    maintenance_runtime_t mrt;
-    unsigned int index;
-
-    maintenance_runtime_init(&mrt, 0UL);
-    for (index = 0U; index < 100U; ++index) {
-        maintenance_runtime_on_falling_edge(&mrt, index * 200UL);
-        assert(maintenance_runtime_poll(&mrt, index * 200UL + 50UL) ==
-               MRT_EVENT_NONE);
-        assert(maintenance_runtime_is_active(&mrt) == 0U);
-    }
+    assert(decoded[0] == (command | 0x80U) && decoded[1] == sequence);
+    assert(decoded[2] == result && decoded[3] == status);
+    assert(decoded[4] == crc8(decoded, 4));
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
 }
 
 int main(void)
 {
-    printf("=== Maintenance Runtime START/STOP Test Suite ===\n\n");
-    RUN_TEST(cold_start_disabled);
-    RUN_TEST(start_three_pulses_enables_monitor);
-    RUN_TEST(start_is_idempotent);
-    RUN_TEST(stop_four_pulses_disables_monitor);
-    RUN_TEST(stop_is_idempotent);
-    RUN_TEST(stop_is_permanent_and_has_no_lease_expiry);
-    RUN_TEST(normal_heartbeat_is_ignored);
-    RUN_TEST(rejects_break_below_minimum);
-    RUN_TEST(accepts_break_at_minimum);
-    RUN_TEST(rejects_sync_outside_window);
-    RUN_TEST(accepts_sync_window_edges);
-    RUN_TEST(rejects_delimiter_outside_window);
-    RUN_TEST(accepts_delimiter_window_edges);
-    RUN_TEST(rejects_payload_slot_outside_window);
-    RUN_TEST(accepts_payload_slot_window_edges);
-    RUN_TEST(rejects_trailer_below_minimum);
-    RUN_TEST(accepts_trailer_at_minimum);
-    printf("\n=== All Tests Passed ===\n");
+    unsigned char command;
+    for (command = MRT_COMMAND_START; command <= MRT_COMMAND_READ; ++command) {
+        setup(0);
+        request(command, 7, 0);
+        assert(maintenance_runtime_poll() == command);
+        expect_reply(command, 7, MRT_RESULT_OK, MRT_STATUS_ENABLED | (MRT_PHASE_STARTUP << 2));
+        assert(accepted_heartbeats == 0);
+    }
+    setup(65500);
+    request(MRT_COMMAND_READ, 255, 0);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_READ);
+    expect_reply(MRT_COMMAND_READ, 255, MRT_RESULT_OK, 0);
+
+    setup(0);
+    request(42, 1, 0);
+    assert(maintenance_runtime_poll() == 42);
+    expect_reply(42, 1, MRT_RESULT_INVALID, 0);
+    request(42, 1, 0);
+    assert(maintenance_runtime_poll() == 42);
+    expect_reply(42, 1, MRT_RESULT_INVALID, 0);
+
+    setup(0);
+    request(MRT_COMMAND_STOP, 1, 1);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
+    advance(1600);
+    assert(edge_count == 0);
+    request(MRT_COMMAND_STOP, 1, 0);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_STOP);
+    expect_reply(MRT_COMMAND_STOP, 1, MRT_RESULT_OK, 0);
+
+    setup(0);
+    request(MRT_COMMAND_READ, 0, 0);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
+    request(MRT_COMMAND_READ, 1, 0);
+    advance(200);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_READ);
+    expect_reply(MRT_COMMAND_READ, 1, MRT_RESULT_OK, 0);
+    request(MRT_COMMAND_START, 2, 0);
+    advance(250);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
+    advance(1600);
+    assert(edge_count == 43);
+
+    setup(0);
+    assert(host_edge(0) == 0);
+    assert(host_edge(400) == 0);
+    advance(35);
+    assert(host_edge(200) == 0);
+    assert(host_edge(200) == 200);
+    setup(0);
+    (void)host_edge(0);
+    (void)host_edge(400);
+    (void)host_edge(32);
+    (void)host_edge(8);
+    advance(17);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_NONE);
+    request(MRT_COMMAND_READ, 3, 0);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_READ);
+    expect_reply(MRT_COMMAND_READ, 3, MRT_RESULT_OK, 0);
+
+    setup(65500);
+    assert(host_edge(0) == 0);
+    assert(host_edge(200) == 200);
+    assert(host_edge(200) == 200);
+    assert(accepted_heartbeats == 2);
+    request(MRT_COMMAND_READ, 5, 0);
+    assert(maintenance_runtime_poll() == MRT_COMMAND_READ);
+    expect_reply(MRT_COMMAND_READ, 5, MRT_RESULT_OK, 0);
+    assert(accepted_heartbeats == 2);
+    advance(65536);
+    assert(host_edge(200) == 0);
+    puts("PASS: 3-byte requests, 5-byte replies, CRC, NAK, time wrap, bounded handoff, partial frames and heartbeat isolation");
     return 0;
 }

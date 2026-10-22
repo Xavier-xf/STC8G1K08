@@ -4,21 +4,13 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 firmware_root=$(CDPATH= cd -- "$root/../.." && pwd)
 binary=$(mktemp /tmp/stc8g1k08-maintenance-runtime-test.XXXXXX)
-wrap_binary=$(mktemp /tmp/stc8g1k08-maintenance-runtime-wrap-test.XXXXXX)
-trap 'rm -f "$binary" "$wrap_binary"' EXIT HUP INT TERM
+trap 'rm -f "$binary"' EXIT HUP INT TERM
 
-gcc -std=c11 -Wall -Wextra -Werror -DMAINTENANCE_RUNTIME_HOST_TEST \
-    -I"$firmware_root/Driver/inc" \
-    "$root/maintenance_runtime_test.c" \
-    "$firmware_root/Driver/src/maintenance_runtime.c" \
-    -o "$binary"
-"$binary"
-
-gcc -std=c11 -Wall -Wextra -Werror \
-    -DMAINTENANCE_RUNTIME_HOST_TEST \
-    -DMAINTENANCE_RUNTIME_HOST_TEST_16BIT \
-    -I"$firmware_root/Driver/inc" \
-    "$root/maintenance_runtime_16bit_test.c" \
-    "$firmware_root/Driver/src/maintenance_runtime.c" \
-    -o "$wrap_binary"
-"$wrap_binary"
+for test in maintenance_runtime_test maintenance_runtime_16bit_test; do
+    gcc -std=c11 -Wall -Wextra -Werror -DMAINTENANCE_RUNTIME_HOST_TEST \
+        -I"$firmware_root/Driver/inc" \
+        "$root/$test.c" \
+        "$firmware_root/Driver/src/maintenance_runtime.c" \
+        -o "$binary"
+    "$binary"
+done

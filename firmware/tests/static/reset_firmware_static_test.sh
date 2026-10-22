@@ -3,140 +3,190 @@ set -eu
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 firmware_root=$(CDPATH= cd -- "$root/../.." && pwd)
-reset="$firmware_root/User/main.c"
-config="$firmware_root/User/Config.h"
-regs="$firmware_root/Driver/inc/stc8g1k08_regs.h"
-project="$firmware_root/RVMDK/STC8G1K08-RESET.uvproj"
-logic="$firmware_root/Driver/src/reset_controller.c"
-uart="$firmware_root/Driver/src/uart.c"
-maintenance_runtime="$firmware_root/Driver/src/maintenance_runtime.c"
-maintenance_runtime_header="$firmware_root/Driver/inc/maintenance_runtime.h"
-heartbeat="$firmware_root/Driver/src/heartbeat_monitor.c"
-heartbeat_header="$firmware_root/Driver/inc/heartbeat_monitor.h"
-reset_header="$firmware_root/Driver/inc/reset_controller.h"
 
-fail() {
-    printf '%s\n' "RESET 固件静态检查失败: $1" >&2
-    exit 1
-}
+# Maintained inputs only; validation archives and Keil listings are not required.
+python3 - "$firmware_root" <<'PY'
+import pathlib
+import re
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 
-require_order() {
-    file=$1
-    first=$2
-    second=$3
-    first_line=$(grep -n -m1 -F "$first" "$file" | cut -d: -f1 || true)
-    second_line=$(grep -n -m1 -F "$second" "$file" | cut -d: -f1 || true)
-    [ -n "$first_line" ] && [ -n "$second_line" ] &&
-        [ "$first_line" -lt "$second_line" ] ||
-        fail "$file 中 $first 必须先于 $second"
-}
+root = pathlib.Path(sys.argv[1]).resolve()
 
-[ -f "$reset" ] || fail "缺少 User/main.c"
-[ -f "$config" ] || fail "缺少 User/Config.h"
-[ -f "$regs" ] || fail "缺少 Driver/inc/stc8g1k08_regs.h"
-[ -f "$logic" ] || fail "缺少 reset_controller.c"
-[ -f "$heartbeat_header" ] || fail "缺少 heartbeat_monitor.h"
-[ -f "$heartbeat" ] || fail "缺少 heartbeat_monitor.c"
-[ -f "$reset_header" ] || fail "缺少 reset_controller.h"
-[ -f "$maintenance_runtime_header" ] || fail "缺少 maintenance_runtime.h"
-[ -f "$maintenance_runtime" ] || fail "缺少 maintenance_runtime.c"
-[ -f "$uart" ] || fail "缺少 uart.c"
-[ -f "$project" ] || fail "缺少独立 RESET Keil 工程"
 
-grep -Fq '<Device>STC8G1K08 Series</Device>' "$project" || fail "器件不是 STC8G1K08 Series"
-grep -Fq '<FilePath>..\Driver\src\maintenance_runtime.c</FilePath>' "$project" || fail "工程未引用 maintenance_runtime"
-grep -Fq '<FilePath>..\Driver\src\uart.c</FilePath>' "$project" || fail "工程未引用 UART 模块"
-grep -Fq '<OutputName>stc8g1k08_reset</OutputName>' "$project" || fail "输出名不正确"
-grep -Fq '<FilePath>..\User\main.c</FilePath>' "$project" || fail "工程未引用 main.c"
-grep -Fq '<FilePath>..\Driver\src\heartbeat_monitor.c</FilePath>' "$project" || fail "工程未引用心跳状态模块"
-grep -Fq '<FilePath>..\Driver\src\reset_controller.c</FilePath>' "$project" || fail "工程未引用复位状态模块"
+def require(condition, message):
+    if not condition:
+        raise SystemExit("RESET 固件静态检查失败: " + message)
 
-grep -Fq '#define AP_RESET_ASSERT_LEVEL 1U' "$config" || fail "新电路必须使用高电平复位"
-grep -Fq '#define STC8G1K08_FIRMWARE_VERSION "1.0.7"' "$config" || fail "版本应为 1.0.7（低电平通电、高电平复位）"
-grep -Fq 'STC8G1K08 reset firmware v' "$reset" || fail "启动横幅未包含固件版本"
-grep -Eq '#define STC8G1K08_UART_LOG_ENABLE [01]U' "$config" || fail "UART 日志开关缺失"
-grep -Fq '#define HEARTBEAT_MONITOR_TIMEOUT_MS 5000UL' "$config" || fail "心跳超时不是 5 秒"
-grep -Fq 'SCON = 0x40' "$uart" || fail "UART 未设置为 TX-only"
-grep -Fq 'void uart1_putc(char value)' "$uart" || fail "缺少 UART TX 接口"
-! grep -Fq 'void uart1_isr(void) interrupt 4' "$uart" || fail "UART RX ISR 仍存在"
-! grep -Fq 'ES = 1' "$uart" || fail "UART 中断仍启用"
-! grep -Fq 'g_uart_rx_buffer' "$uart" || fail "UART RX 缓冲仍存在"
-! grep -Fq 'uart1_read_byte' "$uart" || fail "UART RX API 仍存在"
-! grep -Fq 'uart1_rx_overflow_take' "$uart" || fail "UART RX 溢出 API 仍存在"
-[ ! -e "$firmware_root/RVMDK/STC8G1K08-SMOKE.uvproj" ] || fail "正式工程目录仍包含 SMOKE 工程"
-[ ! -e "$firmware_root/RVMDK/STC8G1K08-MONITOR.uvproj" ] || fail "正式工程目录仍包含 MONITOR 工程"
-grep -Fq '#define AP_RESET_PULSE_MS 200UL' "$config" || fail "缺少复位脉宽配置"
-grep -Fq '#define RESET_HEARTBEAT_GRACE_MS 30000UL' "$config" || fail "RESET 启动宽限不足"
-grep -Fq '#define WDT_PRESCALE 6U' "$config" || fail "WDT 分频不是 128"
-grep -Fq 'sfr WDT_CONTR = 0xC1' "$regs" || fail "缺少 WDT_CONTR SFR"
-grep -Fq 'sfr PCON' "$regs" || fail "缺少 PCON 复位原因寄存器"
-grep -Fq '#define WDT_FLAG_MASK 0x80U' "$regs" || fail "缺少 WDT_FLAG 字节掩码定义"
-! grep -Eq 'sbit[[:space:]]+(PCON_POF|PCON_LVDF|WDT_FLAG)[[:space:]]*=' "$regs" ||
-    fail "不可位寻址 SFR 不得声明为 sbit"
-! grep -Fq 'P5M1 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 不得释放为高阻"
-grep -Fq 'P5M1 &= (unsigned char)~P5_AP_RESET_MASK' "$reset" || fail "P5.5 未清除输入模式"
-grep -Fq 'P5M0 |= P5_AP_RESET_MASK' "$reset" || fail "P5.5 未配置推挽输出"
-require_order "$reset" 'ap_reset_release();' 'P5M0 |= P5_AP_RESET_MASK'
-require_order "$reset" 'P5M0 |= P5_AP_RESET_MASK' 'P5M1 &= (unsigned char)~P5_AP_RESET_MASK'
-grep -Fq 'WDT_CONTR = (unsigned char)(WDT_PRESCALE | WDT_ENABLE_MASK)' "$reset" || fail "没有启动内部 WDT"
-grep -Fq 'PCON' "$reset" || fail "main.c 未读取 PCON 复位原因"
-grep -Fq 'WDT_CONTR & WDT_FLAG_MASK' "$reset" || fail "main.c 未通过 WDT_FLAG 掩码读取复位原因"
-grep -Fq 'reset_cause' "$reset" || fail "缺少复位原因快照"
-require_order "$reset" 'reset_cause' 'wdt_init()'
-grep -Fq '#include "uart.h"' "$reset" || fail "main.c 未接入 UART 模块"
-grep -Fq '#include "maintenance_runtime.h"' "$reset" || fail "main.c 未接入 maintenance_runtime"
-grep -Fq 'maintenance_runtime_init' "$reset" || fail "未初始化 maintenance_runtime"
-grep -Fq 'maintenance_runtime_on_falling_edge' "$reset" || fail "INT2 未调用 maintenance_runtime 解码器"
-grep -Fq 'maintenance_runtime_poll' "$reset" || fail "主循环未轮询维护事件"
-grep -Fq 'static maintenance_runtime_t g_maintenance_runtime;' "$reset" || fail "维护运行时不应放入 XDATA"
-! grep -Fq 'maintenance_runtime_t xdata g_maintenance_runtime' "$reset" || fail "维护运行时不应放入 XDATA"
-grep -Fq 'MRT_EVENT_START' "$reset" || fail "未处理 START 事件"
-grep -Fq 'MRT_EVENT_STOP' "$reset" || fail "未处理 STOP 事件"
-! grep -Fq 'MRT_EVENT_ENTER' "$reset" || fail "仍处理 ENTER 事件"
-! grep -Fq 'MRT_EVENT_EXIT' "$reset" || fail "仍处理 EXIT 事件"
-! grep -Fq 'MRT_EVENT_EXPIRED' "$reset" || fail "仍处理 EXPIRED 事件"
-grep -Fq 'MRT_MODE_MAINTENANCE' "$reset" || fail "未检查维护模式"
-! grep -Fq 'g_command_length' "$reset" || fail "UART 命令缓冲残留"
-! grep -Fq 'app_poll_commands' "$reset" || fail "UART 命令轮询残留"
-grep -Fq 'static void app_report' "$reset" || fail "缺少周期状态输出"
-grep -Fq 'heartbeat_snapshot(' "$reset" || fail "缺少单次心跳快照"
-grep -Fq '#if STC8G1K08_UART_LOG_ENABLE' "$uart" || fail "UART 实现未受编译开关控制"
-grep -Fq '#ifdef HEARTBEAT_MONITOR_HOST_TEST' "$heartbeat" || fail "心跳测试查询未隔离"
-grep -Fq '#ifdef RESET_CONTROLLER_HOST_TEST' "$logic" || fail "复位状态查询未隔离"
-grep -Fq '#ifdef HEARTBEAT_MONITOR_HOST_TEST' "$heartbeat_header" || fail "心跳测试 API 声明未隔离"
-grep -Fq '#ifdef RESET_CONTROLLER_HOST_TEST' "$reset_header" || fail "复位测试 API 声明未隔离"
-grep -Fq 'static volatile heartbeat_monitor_ms_t g_millisecond;' "$reset" || fail "毫秒时基应放入 DATA"
-! grep -Fq 'static volatile heartbeat_monitor_ms_t xdata g_millisecond;' "$reset" || fail "毫秒时基不应放入 XDATA"
-! grep -Fq 'g_last_cpu_check_edge_ms' "$reset" || fail "直接心跳路径不应维护额外边沿时间戳"
-grep -Fq 'heartbeat_monitor_t heartbeat;' "$reset" || fail "主循环缺少局部心跳快照"
-! grep -Fq 'g_decision_snapshot' "$reset" || fail "不应保留决策快照日志"
-! grep -Fq 'heartbeat_status_snapshot' "$reset" || fail "不应保留分离的心跳状态快照"
-! grep -Fq 'g_millis_snapshot_value' "$reset" || fail "不应保留 XDATA 毫秒暂存"
-! grep -Fq 'g_heartbeat_status_value' "$reset" || fail "不应保留 XDATA 心跳状态暂存"
-! grep -Fq 'g_saved_ea' "$reset" || fail "不应保留共享 EA 暂存"
-! grep -Fq 'g_app_now_ms' "$reset" || fail "不应保留 XDATA 主循环时间暂存"
-! grep -Fq 'g_report_last_edge_ms' "$reset" || fail "不应保留 XDATA 报告边沿暂存"
-! grep -Fq 'g_report_edge_count' "$reset" || fail "不应保留 XDATA 报告计数暂存"
-! grep -Fq 'g_report_edge_seen' "$reset" || fail "不应保留报告边沿标志暂存"
-! grep -Fq 'g_app_heartbeat_status' "$reset" || fail "不应保留 XDATA 主循环状态暂存"
-! grep -Fq 'g_last_report_ms' "$reset" || fail "不应保留 XDATA 周期报告时间暂存"
-! grep -Fq 'CPU_CHECK_HEARTBEAT_MIN_INTERVAL_MS' "$config" || fail "基线固件不应配置边沿过滤"
-! grep -Fq 'CPU_CHECK_HEARTBEAT_MAX_INTERVAL_MS' "$config" || fail "基线固件不应配置边沿过滤"
-grep -Fq 'heartbeat_monitor_on_falling_edge(&g_heartbeat_monitor, now_ms);' "$reset" || fail "INT2 未先记录心跳"
-grep -Fq 'maintenance_runtime_on_falling_edge(&g_maintenance_runtime, now_ms);' "$reset" || fail "INT2 未在心跳后调用解码器"
-grep -Fq 'maintenance_runtime_snapshot(&mrt_event, &mrt_mode, now_ms);' "$reset" || fail "维护状态轮询未使用临界区快照"
-grep -Fq 'heartbeat_monitor_init(&g_heartbeat_monitor, now_ms);' "$reset" || fail "恢复正常模式未重置心跳宽限"
-grep -Fq 'if (mrt_event == MRT_EVENT_START)' "$reset" || fail "未处理 START 状态切换"
-grep -Fq 'mrt_event == MRT_EVENT_STOP' "$reset" || fail "未处理 STOP 状态切换"
-grep -Fq '#if STC8G1K08_UART_LOG_ENABLE' "$reset" || fail "UART 输出未受编译开关控制"
-grep -Fq 'WDT_CONTR |= WDT_CLEAR_MASK' "$reset" || fail "没有清除内部 WDT"
-grep -Fq 'g_reset_output_active = 0U' "$reset" || fail "上电默认输出不是安全状态"
-grep -Fq 'reset_controller_output_active' "$reset" || fail "未应用复位状态机输出"
-grep -Fq 'void int2_isr(void) interrupt 10' "$reset" || fail "未注册 INT2"
 
-! grep -Fq 'app_take_decision_snapshot' "$reset" || fail "不应保留决策快照采集"
-! grep -Fq 'app_report_output_transition' "$reset" || fail "不应保留输出转换诊断"
-! grep -Fq 'reason=timeout' "$reset" || fail "不应保留决策快照断言日志"
-! grep -Fq 'p54_at_decision=' "$reset" || fail "不应保留决策快照字段"
+def local_path(base, spelling):
+    path = (base / spelling.replace("\\", "/")).resolve()
+    require(path.is_relative_to(root), "不得引用跨工程文件: " + spelling)
+    require(path.is_file(), "缺少文件: " + spelling)
+    return path
 
-printf '%s\n' 'OK: STC8G1K08 RESET 固件静态检查通过'
+
+project = local_path(root, "RVMDK/STC8G1K08-RESET.uvproj")
+targets = ET.parse(project).findall("./Targets/Target")
+require(len(targets) == 1, "正式工程必须只有一个目标")
+target = targets[0]
+require(target.findtext("./TargetOption/TargetCommonOption/Device") ==
+        "STC8G1K08 Series", "器件不是 STC8G1K08")
+require(target.findtext("./TargetOption/Target51/Target51Misc/MemoryModel") ==
+        "0", "正式工程必须保持 SMALL/DATA 模式")
+expected = {root / name for name in (
+    "User/main.c", "Driver/src/heartbeat_monitor.c", "Driver/src/uart.c",
+    "Driver/src/reset_controller.c", "Driver/src/maintenance_runtime.c")}
+files = target.findall("./Groups/Group/Files/File")
+paths = [local_path(project.parent, node.findtext("FilePath", "")) for node in files]
+require(len(paths) == 5 and set(paths) == expected,
+        "正式工程必须只编入五个本工程源码（无历史验证/跨工程源码）")
+require(all(node.findtext("FileType") == "1" for node in files),
+        "正式源码必须作为 C 文件编译")
+require(all(node.findtext(".//IncludeInBuild", "1") == "1" for node in files),
+        "正式源码不得从构建中排除")
+require(all(node.text == "0" for node in target.findall(".//MemoryModel")),
+        "文件级设置不得覆盖 SMALL 模式")
+controls = " ".join(node.text or "" for node in target.findall(".//MiscControls"))
+require(not re.search(r"\b(?:COMPACT|LARGE|XDATA|IDATA)\b", controls, re.I),
+        "编译/链接控制不得覆盖生产内存路径")
+require(not any("HOST_TEST" in (node.text or "")
+                for node in target.findall(".//Define") + target.findall(".//MiscControls")),
+        "正式工程不得启用 host 测试分支")
+include_dirs = []
+for node in target.findall(".//IncludePath"):
+    for spelling in (node.text or "").split(";"):
+        if spelling:
+            path = (project.parent / spelling.replace("\\", "/")).resolve()
+            require(path.is_relative_to(root) and path.is_dir(),
+                    "头文件目录必须留在独立 firmware 内: " + spelling)
+            include_dirs.append(path)
+
+# Follow local headers too, so a wrapper/symlink cannot import application sources.
+source = {}
+pending = list(paths)
+while pending:
+    path = pending.pop()
+    if path in source:
+        continue
+    text = path.read_text()
+    source[path] = text
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    for delimiter, spelling in re.findall(r'^\s*#\s*include\s*([<"])([^>"\n]+)', text, re.M):
+        if delimiter == "<":
+            require(spelling == "stdint.h", "非本地依赖: " + spelling)
+            continue
+        candidates = [base / spelling for base in [path.parent] + include_dirs]
+        matches = [candidate for candidate in candidates if candidate.is_file()]
+        require(bool(matches), "无法独立解析头文件: " + spelling)
+        included = local_path(matches[0].parent, matches[0].name)
+        require(included.suffix == ".h", "生产代码不得 include 其他工程/实现源码")
+        pending.append(included)
+
+# Select production branches without compiling C51 syntax or writing build outputs.
+active = {}
+for path in paths:
+    active[path.name] = subprocess.check_output(
+        ["gcc", "-E", "-P", "-x", "c"] +
+        ["-I" + str(directory) for directory in include_dirs] + [str(path)], text=True)
+    require(not re.search(r"\b(?:xdata|idata)\b", active[path.name]),
+            path.name + " 不得改为 XDATA/IDATA 生产路径")
+print("OK: 独立五源码工程、SMALL/DATA、无生产 xdata/idata")
+
+config = source[root / "User/Config.h"]
+macros = dict(re.findall(r'^\s*#\s*define\s+(\w+)\s+([^\n]+)', config, re.M))
+for name, value in {
+    "MAIN_FOSC": 24000000, "TIMER0_TICK_HZ": 1000, "UART_BAUDRATE": 9600,
+    "AP_RESET_ASSERT_LEVEL": 1, "AP_RESET_PULSE_MS": 200,
+    "RESET_HEARTBEAT_GRACE_MS": 30000, "HEARTBEAT_MONITOR_TIMEOUT_MS": 5000,
+}.items():
+    literal = re.sub(r"[uUlL]+$", "", macros.get(name, "").strip())
+    require(literal.isdigit() and int(literal) == value, "板级时序/极性配置不符: " + name)
+require(re.fullmatch(r'"[^"\n]+"', macros.get("STC8G1K08_FIRMWARE_VERSION", "")),
+        "固件版本必须是非空字符串，而不是固定旧版本")
+require("STC8G1K08_FIRMWARE_VERSION" in source[root / "User/main.c"],
+        "启动横幅必须引用版本宏")
+require(re.search(r"protocol=short-frame\s+3/5\s+bytes", source[root / "User/main.c"]),
+        "唯一正式协议应声明为 3 字节请求/5 字节应答")
+header = source[root / "Driver/inc/maintenance_runtime.h"]
+api = set(re.findall(r'\b(maintenance_runtime_\w+)\s*\([^;{}]*\)\s*;', header))
+require(api == {"maintenance_runtime_" + name for name in (
+    "init", "tick", "on_falling_edge", "poll", "reply")},
+    "维护接口必须是当前短帧 API，不得恢复旧事件/维护模式接口")
+for name, value in {"NONE": 0, "START": 1, "STOP": 2, "READ": 3}.items():
+    require(re.search(r'^\s*#\s*define\s+MRT_COMMAND_' + name +
+                      r'\s+' + str(value) + r'U?\b', header, re.M), "短帧命令不符: " + name)
+# Host runners check actual frame lengths/CRC and electrical register transitions;
+# do not freeze the decoder's bit counts, state names or temporary variables here.
+print("OK: 当前唯一 3/5 短帧接口、版本宏和板级时序")
+
+# Call-graph responsibility check for the C51 SMALL overlay boundary.
+functions = {}
+for filename, text in active.items():
+    text = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', '""', text)
+    for match in re.finditer(r'\b(\w+)\s*\([^;{}]*\)\s*(?:interrupt\s+\d+\s*)?\{', text):
+        name = match.group(1)
+        if name in {"if", "for", "while", "switch"}:
+            continue
+        depth, end = 1, match.end()
+        while depth and end < len(text):
+            depth += (text[end] == "{") - (text[end] == "}")
+            end += 1
+        require(depth == 0 and name not in functions, "无法分析函数: " + name)
+        functions[name] = (text[match.end():end - 1], match.group())
+calls = {name: set(re.findall(r'\b(\w+)\s*\(', body)) & functions.keys()
+         for name, (body, _) in functions.items()}
+
+
+def reachable(start):
+    seen, pending = set(), [start]
+    while pending:
+        name = pending.pop()
+        require(name in functions, "缺少职责入口: " + name)
+        if name not in seen:
+            seen.add(name)
+            pending.extend(calls[name] - seen)
+    return seen
+
+
+main = reachable("main")
+timer = reachable("timer0_isr")
+edge = reachable("int2_isr")
+require(re.search(r'\binterrupt\s+1\b', functions["timer0_isr"][1]), "Timer0 向量必须为 1")
+require(re.search(r'\binterrupt\s+10\b', functions["int2_isr"][1]), "INT2 向量必须为 10")
+require(not (main & timer or main & edge or timer & edge),
+        "main/Timer0/INT2 不得共享函数调用链（SMALL overlay 安全边界）")
+require({"maintenance_runtime_tick", "line_write"} <= timer,
+        "Timer0 必须负责计时和应答线输出")
+require({"maintenance_runtime_on_falling_edge", "heartbeat_monitor_on_falling_edge"} <= edge,
+        "INT2 必须负责边沿解码和已确认心跳记录")
+require({"maintenance_runtime_poll", "maintenance_runtime_reply", "reset_controller_update",
+         "apply_reset_output", "wdt_clear"} <= main,
+        "主循环必须负责命令执行/应答准备、复位决策和喂狗")
+require(not any(name.startswith("uart1_") for name in timer | edge), "ISR 不得阻塞输出 UART")
+require(not re.search(r'\binterrupt\s+4\b|\bES\s*=\s*1\b', active["uart.c"]),
+        "正式 UART 只用于诊断，不得恢复 UART RX 协议")
+for name, (body, _) in functions.items():
+    for match in re.finditer(r'\bmaintenance_runtime_(?:poll|reply)\s*\(', body):
+        writes = re.findall(r'\bEA\s*=\s*([^;]+);', body[:match.start()])
+        require(writes and writes[-1].strip() in {"0", "0U"},
+                name + " 的命令交接/应答准备必须关中断")
+print("OK: Timer0/INT2/main 分工、无共享调用链、命令交接临界区")
+
+regs = source[root / "Driver/inc/stc8g1k08_regs.h"]
+for signal, pin in (("CPU_CHECK", 4), ("AP_RESET_TEST", 5)):
+    require(re.search(r'\bsbit\s+' + signal + r'\s*=\s*P5\s*\^\s*' + str(pin) + r'\s*;', regs),
+            "板级引脚绑定错误: " + signal)
+require(not re.search(r'\bsbit\s+(?:PCON_POF|PCON_LVDF|WDT_FLAG)\s*=', regs),
+        "复位原因 SFR 不可声明为可位寻址")
+for name, (body, _) in functions.items():
+    if re.search(r'P5M[01]\s*[|&]?=\s*[^;]*\b0x20\b', body):
+        require(name == "gpio_reset_init", "P5.5 推挽模式只能初始化，运行中不得释放")
+line = functions["line_write"][0]
+require(not re.search(r'P5M1\s*&=', line), "P5.4 应答不得切为推挽模式")
+require(re.search(r'P5M0\s*\|=', line) and re.search(r'P5M0\s*&=', line),
+        "P5.4 应答必须可低拉/释放，不能持续驱动高电平")
+print("OK: P5.4 低拉高释/P5.5 持续推挽低正常高复位的静态边界")
+print("OK: STC8G1K08 RESET 固件静态检查通过（不读取历史生成物）")
+PY

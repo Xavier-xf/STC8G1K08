@@ -1,224 +1,205 @@
 #include "maintenance_runtime.h"
 
 #ifdef MAINTENANCE_RUNTIME_HOST_TEST
-typedef maintenance_runtime_ms_t mrt_interval_t;
-#define MRT_EDGE_ELAPSED(now_ms, then_ms) \
-    ((maintenance_runtime_ms_t)((now_ms) - (then_ms)))
+#include <stdint.h>
+typedef uint16_t mrt_tick_t;
+extern unsigned char P5, P5M0, P5M1;
 #else
-typedef unsigned int mrt_interval_t;
-#define MRT_EDGE_ELAPSED(now_ms, then_ms) \
-    ((unsigned int)((unsigned int)(now_ms) - (unsigned int)(then_ms)))
+#include "Config.h"
+typedef unsigned int mrt_tick_t;
 #endif
 
-/* 重置解码器状态（保留 have_edge 和 monitor_enabled） */
-static void mrt_decoder_reset(maintenance_runtime_t *mrt)
+#define MRT_IDLE 0U
+#define MRT_SYNC 1U
+#define MRT_RECEIVE 2U
+#define MRT_READY 3U
+#define MRT_EXECUTING 4U
+#define MRT_TX_WAIT 5U
+#define MRT_TX_BREAK_LOW 6U
+#define MRT_TX_BREAK_HIGH 7U
+#define MRT_TX_SYNC_LOW 8U
+#define MRT_TX_SYNC_HIGH 9U
+#define MRT_TX_DATA_LOW 10U
+#define MRT_TX_DATA_HIGH 11U
+
+static volatile unsigned char frame[5];
+static volatile unsigned char state;
+static volatile unsigned char bit_count;
+static volatile unsigned char have_edge;
+static volatile mrt_tick_t last_edge_ms;
+static volatile mrt_tick_t delay_ms;
+
+/* Only Timer0 calls this; no main-loop/ISR overlay sharing. */
+static void line_write(unsigned char high)
 {
-    unsigned char state = mrt->state;
-    MRT_SET_DECODER_STATE(state, MRT_DECODER_IDLE);
-    MRT_SET_PAYLOAD_COUNT(state, 0U);
-    MRT_SET_HAVE_EDGE(state, 0U);
-    mrt->state = state;
-    /* 维护开关状态保持不变；下一帧从新的首边沿开始。 */
-}
-
-/* 初始化 */
-void maintenance_runtime_init(maintenance_runtime_t *mrt,
-                              maintenance_runtime_ms_t now_ms)
-{
-    if (mrt == 0) return;
-    mrt->last_edge_ms = now_ms;
-    mrt->state = 0U;  /* 全部字段初始化为 0 */
-}
-
-void maintenance_runtime_set_active(maintenance_runtime_t *mrt,
-                                     unsigned char active)
-{
-    unsigned char state;
-
-    if (mrt == 0) return;
-    state = mrt->state;
-    MRT_SET_MONITOR_ENABLED(state, active != 0U ? 1U : 0U);
-    MRT_SET_EVENT_PENDING(state, 0U);
-    mrt->state = state;
-}
-
-/* INT2 边沿处理 */
-void maintenance_runtime_on_falling_edge(maintenance_runtime_t *mrt,
-                                         maintenance_runtime_ms_t now_ms)
-{
-    mrt_interval_t interval;
-    unsigned char state;
-    unsigned char decoder_state;
-    unsigned char payload_count;
-
-    if (mrt == 0) return;
-
-    state = mrt->state;
-
-    /* 第一个边沿 */
-    if (MRT_HAVE_EDGE(state) == 0U) {
-        mrt->last_edge_ms = now_ms;
-        MRT_SET_HAVE_EDGE(state, 1U);
-        mrt->state = state;
-        return;
-    }
-
-    /* 计算间隔 */
-    interval = MRT_EDGE_ELAPSED(now_ms, mrt->last_edge_ms);
-    mrt->last_edge_ms = now_ms;
-
-    decoder_state = MRT_DECODER_STATE(state);
-
-    /* IDLE: 等待 BREAK */
-    if (decoder_state == MRT_DECODER_IDLE) {
-        if (interval >= MRT_BREAK_MIN_MS) {
-            MRT_SET_DECODER_STATE(state, MRT_DECODER_SYNC);
-            mrt->state = state;
-        }
-        return;
-    }
-
-    /* SYNC: 等待短脉冲 */
-    if (decoder_state == MRT_DECODER_SYNC) {
-        if (interval < MRT_SHORT_MIN_MS || interval > MRT_SHORT_MAX_MS) {
-            mrt_decoder_reset(mrt);
-        } else {
-            MRT_SET_DECODER_STATE(state, MRT_DECODER_DELIMITER);
-            mrt->state = state;
-        }
-        return;
-    }
-
-    /* DELIMITER: 等待分隔符 */
-    if (decoder_state == MRT_DECODER_DELIMITER) {
-        if (interval < MRT_DELIMITER_MIN_MS || interval > MRT_DELIMITER_MAX_MS) {
-            mrt_decoder_reset(mrt);
-        } else {
-            MRT_SET_DECODER_STATE(state, MRT_DECODER_PAYLOAD);
-            MRT_SET_PAYLOAD_COUNT(state, 0U);
-            mrt->state = state;
-        }
-        return;
-    }
-
-    /* PAYLOAD: 接收载荷脉冲 */
-    payload_count = MRT_PAYLOAD_COUNT(state);
-    if (interval >= MRT_TRAILER_MIN_MS) {
-        /*
-         * 主循环可能正被 UART 日志阻塞，导致 trailer 到期后的第一个
-         * 普通心跳下降沿先进入 ISR。此时先锁存合法事件，不能把它当作
-         * 错误载荷清掉；主循环稍后通过 poll() 取走事件。
-         */
-        if (payload_count == 3U) {
-            MRT_SET_MONITOR_ENABLED(state, 1U);
-            MRT_SET_EVENT_PENDING(state, 1U);
-            mrt->state = state;
-            mrt_decoder_reset(mrt);
-            return;
-        }
-        if (payload_count == 4U) {
-            MRT_SET_MONITOR_ENABLED(state, 0U);
-            MRT_SET_EVENT_PENDING(state, 1U);
-            mrt->state = state;
-            mrt_decoder_reset(mrt);
-            return;
-        }
-        mrt_decoder_reset(mrt);
-    } else if (interval < MRT_SHORT_MIN_MS || interval > MRT_SHORT_MAX_MS) {
-        mrt_decoder_reset(mrt);
+    if (high) {
+        P5M1 |= 0x10U;
+        P5M0 &= (unsigned char)~0x10U;
+        P5 |= 0x10U;
     } else {
-        ++payload_count;
-        if (payload_count > 4U) {
-            mrt_decoder_reset(mrt);
+        P5 &= (unsigned char)~0x10U;
+        P5M1 |= 0x10U;
+        P5M0 |= 0x10U;
+    }
+}
+
+static unsigned char frame_crc(unsigned char size)
+{
+    unsigned char crc = 0U;
+    unsigned char index;
+    unsigned char shift;
+
+    for (index = 0U; index < size; ++index) {
+        crc ^= frame[index];
+        for (shift = 0U; shift < 8U; ++shift) {
+            if (crc & 0x80U) crc = (unsigned char)((crc << 1) ^ 0x07U);
+            else crc = (unsigned char)(crc << 1);
+        }
+    }
+    return crc;
+}
+
+void maintenance_runtime_init(void)
+{
+    state = MRT_IDLE;
+    bit_count = 0U;
+    have_edge = 0U;
+    last_edge_ms = 0U;
+    delay_ms = 0U;
+    P5M1 |= 0x10U;
+    P5M0 &= (unsigned char)~0x10U;
+    P5 |= 0x10U;
+}
+
+unsigned int maintenance_runtime_on_falling_edge(unsigned int now_ms)
+{
+    mrt_tick_t interval;
+
+    if (state >= MRT_READY) return 0U;
+    interval = (mrt_tick_t)((mrt_tick_t)now_ms - last_edge_ms);
+    last_edge_ms = (mrt_tick_t)now_ms;
+    if (!have_edge) {
+        have_edge = 1U;
+        delay_ms = 1000U;
+        return 0U;
+    }
+    if (state == MRT_IDLE) {
+        if (interval >= 398U && interval <= 402U) {
+            state = MRT_SYNC;
+            bit_count = 0U;
+            delay_ms = 35U;
         } else {
-            MRT_SET_PAYLOAD_COUNT(state, payload_count);
-            mrt->state = state;
+            delay_ms = 1000U;
+            if (interval >= 170U && interval <= 250U) return interval;
+        }
+        return 0U;
+    }
+    if (state == MRT_SYNC) {
+        if (interval < 30U || interval > 34U) goto invalid;
+        state = MRT_RECEIVE;
+    } else {
+        if (!((interval >= 6U && interval <= 10U) ||
+              (interval >= 12U && interval <= 16U))) goto invalid;
+        frame[bit_count >> 3] = (unsigned char)((frame[bit_count >> 3] << 1) |
+                                               (interval >= 12U ? 1U : 0U));
+        if (++bit_count == 24U) {
+            state = MRT_READY;
+            /* Allow the existing 9600-baud diagnostic line to finish. */
+            delay_ms = 250U;
+            return 0U;
         }
     }
+    delay_ms = 17U;
+    return 0U;
+invalid:
+    state = MRT_IDLE;
+    have_edge = 0U;
+    delay_ms = 0U;
+    return 0U;
 }
 
-/* 轮询事件 */
-maintenance_runtime_event_t maintenance_runtime_poll(
-    maintenance_runtime_t *mrt,
-    maintenance_runtime_ms_t now_ms)
+unsigned char maintenance_runtime_poll(void)
 {
-    mrt_interval_t elapsed;
-    unsigned char state;
-    unsigned char decoder_state;
-    unsigned char payload_count;
-    unsigned char monitor_enabled;
-
-    if (mrt == 0) return MRT_EVENT_NONE;
-
-    state = mrt->state;
-    monitor_enabled = MRT_MONITOR_ENABLED(state);
-
-    if (MRT_EVENT_PENDING(state) != 0U) {
-        MRT_SET_EVENT_PENDING(state, 0U);
-        mrt->state = state;
-        if (monitor_enabled != 0U) return MRT_EVENT_START;
-        return MRT_EVENT_STOP;
+    if (state != MRT_READY) return MRT_COMMAND_NONE;
+    if (!frame[0] || (frame[0] & 0x80U) || !frame[1] || frame_crc(2U) != frame[2]) {
+        state = MRT_IDLE;
+        have_edge = 0U;
+        delay_ms = 0U;
+        return MRT_COMMAND_NONE;
     }
+    state = MRT_EXECUTING;
+    return frame[0];
+}
 
-    /* 检查解码器状态 */
-    if (MRT_HAVE_EDGE(state) == 0U) {
-        return MRT_EVENT_NONE;
+void maintenance_runtime_reply(unsigned char result, unsigned char status)
+{
+    if (state != MRT_EXECUTING) return;
+    frame[0] |= 0x80U;
+    frame[2] = result;
+    frame[3] = status;
+    frame[4] = frame_crc(4U);
+    bit_count = 0U;
+    delay_ms = 100U;
+    state = MRT_TX_WAIT;
+}
+
+void maintenance_runtime_tick(void)
+{
+    if (delay_ms) {
+        --delay_ms;
+        if (delay_ms) return;
     }
-
-    decoder_state = MRT_DECODER_STATE(state);
-
-    /* PAYLOAD 状态：等待 trailer */
-    if (decoder_state == MRT_DECODER_PAYLOAD) {
-        elapsed = MRT_EDGE_ELAPSED(now_ms, mrt->last_edge_ms);
-        if (elapsed >= MRT_TRAILER_MIN_MS) {
-            payload_count = MRT_PAYLOAD_COUNT(state);
-
-            /* 3 个脉冲 = START */
-            if (payload_count == 3U) {
-                MRT_SET_MONITOR_ENABLED(state, 1U);
-                mrt->state = state;
-                mrt_decoder_reset(mrt);
-                return MRT_EVENT_START;
-            }
-
-            /* 4 个脉冲 = STOP */
-            if (payload_count == 4U) {
-                MRT_SET_MONITOR_ENABLED(state, 0U);
-                mrt->state = state;
-                mrt_decoder_reset(mrt);
-                return MRT_EVENT_STOP;
-            }
-
-            /* 其他脉冲数无效 */
-            mrt_decoder_reset(mrt);
+    switch (state) {
+    case MRT_IDLE:
+        have_edge = 0U;
+        break;
+    case MRT_SYNC:
+    case MRT_RECEIVE:
+    case MRT_READY:
+    case MRT_EXECUTING:
+        state = MRT_IDLE;
+        have_edge = 0U;
+        break;
+    case MRT_TX_WAIT:
+        line_write(0U);
+        state = MRT_TX_BREAK_LOW;
+        delay_ms = 2U;
+        break;
+    case MRT_TX_BREAK_LOW:
+        line_write(1U);
+        state = MRT_TX_BREAK_HIGH;
+        delay_ms = 398U;
+        break;
+    case MRT_TX_BREAK_HIGH:
+        line_write(0U);
+        state = MRT_TX_SYNC_LOW;
+        delay_ms = 2U;
+        break;
+    case MRT_TX_SYNC_LOW:
+        line_write(1U);
+        state = MRT_TX_SYNC_HIGH;
+        delay_ms = 30U;
+        break;
+    case MRT_TX_SYNC_HIGH:
+        line_write(0U);
+        state = MRT_TX_DATA_LOW;
+        delay_ms = 2U;
+        break;
+    case MRT_TX_DATA_LOW:
+        line_write(1U);
+        if (bit_count == 40U) {
+            state = MRT_IDLE;
+            have_edge = 0U;
+        } else {
+            delay_ms = (frame[bit_count >> 3] & (0x80U >> (bit_count & 7U))) ? 12U : 6U;
+            ++bit_count;
+            state = MRT_TX_DATA_HIGH;
         }
+        break;
+    case MRT_TX_DATA_HIGH:
+        line_write(0U);
+        state = MRT_TX_DATA_LOW;
+        delay_ms = 2U;
+        break;
     }
-    /* SYNC/DELIMITER 超时检查 */
-    else if (decoder_state != MRT_DECODER_IDLE) {
-        if (MRT_EDGE_ELAPSED(now_ms, mrt->last_edge_ms) >= MRT_SYNC_TIMEOUT_MS) {
-            mrt_decoder_reset(mrt);
-        }
-    }
-
-    return MRT_EVENT_NONE;
 }
-
-/* 查询当前模式 */
-maintenance_runtime_mode_t maintenance_runtime_mode(
-    const maintenance_runtime_t *mrt)
-{
-    if (mrt == 0) return MRT_MODE_NORMAL;
-    return MRT_MONITOR_ENABLED(mrt->state) != 0U
-        ? MRT_MODE_MAINTENANCE
-        : MRT_MODE_NORMAL;
-}
-
-#ifdef MAINTENANCE_RUNTIME_HOST_TEST
-/* 查询是否在维护模式 */
-unsigned char maintenance_runtime_is_active(const maintenance_runtime_t *mrt)
-{
-    if (mrt == 0) return 0U;
-    return MRT_MONITOR_ENABLED(mrt->state);
-}
-
-#endif

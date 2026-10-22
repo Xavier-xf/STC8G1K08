@@ -6,7 +6,7 @@
  * 本版按 24 MHz 编译；如果 ISP 使用了其他频率，必须同步修改并重新计算
  * Timer0 的 1 ms 时基和 UART1 的 9600 baud 重载值。
  */
-#define STC8G1K08_FIRMWARE_VERSION "1.0.7"
+#define STC8G1K08_FIRMWARE_VERSION "1.1.0"
 #define STC8G1K08_UART_LOG_ENABLE 1U
 #define MAIN_FOSC 24000000UL
 #define UART_BAUDRATE 9600UL

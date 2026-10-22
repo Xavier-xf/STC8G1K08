@@ -1,0 +1,367 @@
+[
+  {
+    "original": "README.md",
+    "archived": "archive/README-previous.md",
+    "sha256": "7c23de2303c027f9fdd63c3c1bfe3bc915a34e3fe5577548524613ef56ec12fe"
+  },
+  {
+    "original": "docs/superpowers/plans/2026-08-17-stc8g1k08-reset.md",
+    "archived": "archive/design-notes/superpowers/plans/2026-08-17-stc8g1k08-reset.md",
+    "sha256": "9da242f41f3a97033816f4cfdc50a0159587995e91d7a5f3ad3e35b202a8dc27"
+  },
+  {
+    "original": "docs/superpowers/plans/2026-08-18-stc-maintenance-mode.md",
+    "archived": "archive/design-notes/superpowers/plans/2026-08-18-stc-maintenance-mode.md",
+    "sha256": "63cf2f54a7973e7ad806e11370e5dac2b440b0859d64846d036957f7af3dae59"
+  },
+  {
+    "original": "docs/superpowers/plans/2026-08-18-stc8g1k08-formalization.md",
+    "archived": "archive/design-notes/superpowers/plans/2026-08-18-stc8g1k08-formalization.md",
+    "sha256": "e4a7a5ca1d69aa0201c3e9e57e7b34f1586e8fc97bdc50f88b367976a1d434df"
+  },
+  {
+    "original": "docs/superpowers/plans/2026-08-21-stc-firmware-cleanup.md",
+    "archived": "archive/design-notes/superpowers/plans/2026-08-21-stc-firmware-cleanup.md",
+    "sha256": "52c7bebf7de5155b60c19be3b37a1b4533d4a07d8c81eba8062428796ac56101"
+  },
+  {
+    "original": "docs/superpowers/plans/2026-08-22-stc-start-stop-monitor.md",
+    "archived": "archive/design-notes/superpowers/plans/2026-08-22-stc-start-stop-monitor.md",
+    "sha256": "f0f2f3dfff819b094d5815ab7cec141101d4f185925b67d493a3dbd81d321240"
+  },
+  {
+    "original": "docs/superpowers/specs/2026-08-17-stc8g1k08-reset-design.md",
+    "archived": "archive/design-notes/superpowers/specs/2026-08-17-stc8g1k08-reset-design.md",
+    "sha256": "128d8c3e46ae2ee965cb54f3383cfb959847318ef63eb81ad4256f0bc85250f8"
+  },
+  {
+    "original": "docs/superpowers/specs/2026-08-18-stc-maintenance-mode-design.md",
+    "archived": "archive/design-notes/superpowers/specs/2026-08-18-stc-maintenance-mode-design.md",
+    "sha256": "07af31616f53f986b88a5c5374289ee5dbeeafeb67f3c32ce80677cee3d1c04c"
+  },
+  {
+    "original": "docs/superpowers/specs/2026-08-18-stc8g1k08-formalization-design.md",
+    "archived": "archive/design-notes/superpowers/specs/2026-08-18-stc8g1k08-formalization-design.md",
+    "sha256": "10699f0e0f806d117918f48ea302a41abf7f002b43142d6593c9f254fecbdd9b"
+  },
+  {
+    "original": "docs/superpowers/specs/2026-08-21-stc-firmware-cleanup-design.md",
+    "archived": "archive/design-notes/superpowers/specs/2026-08-21-stc-firmware-cleanup-design.md",
+    "sha256": "436f6681efe18ef1bfc0962e699c3e2afaead878b43d7fd8d788b9c9c3370bc4"
+  },
+  {
+    "original": "firmware/README.md",
+    "archived": "archive/firmware-README-previous.md",
+    "sha256": "0d68967d22adc7d57ba32366f4928e02bdbf9af45db78c4b42e9d0b8e64af318"
+  },
+  {
+    "original": "firmware/验证记录.md",
+    "archived": "archive/verification-history.md",
+    "sha256": "b816752beeb925017a293f0d9324433870e501c77a7ca25e4fee72906b754467"
+  },
+  {
+    "original": "firmware/isp-config-bringup.txt",
+    "archived": "archive/isp-config-bringup.txt",
+    "sha256": "7807036d6e44cffb97c2de9b632038f2cf8aa264a9cbffc6e7971aafc4088457"
+  },
+  {
+    "original": "firmware/validation/Config.h.smoke.orig",
+    "archived": "archive/validation/Config.h.smoke.orig",
+    "sha256": "5c5af6f94b653c88c856c8ee8d29403e7ec8fb739d0ee290098c2a1c674342c9"
+  },
+  {
+    "original": "firmware/validation/Main.c",
+    "archived": "archive/validation/Main.c",
+    "sha256": "e57965481ecdd970cac1c66959a7cf02e75336594759795021f2b9cc62f554f9"
+  },
+  {
+    "original": "firmware/validation/Monitor.c",
+    "archived": "archive/validation/Monitor.c",
+    "sha256": "8acb14a5bf7af5f3723a7f937359a92995878e2216c85bb8ff184514937f223d"
+  },
+  {
+    "original": "firmware/validation/README-smoke.md",
+    "archived": "archive/validation/README-smoke.md",
+    "sha256": "d2f28ed30d33325b982479a33dc182242653b58e826a280da49ecc35d2d65ec1"
+  },
+  {
+    "original": "firmware/validation/README.md",
+    "archived": "archive/validation/README.md",
+    "sha256": "b021e3e64eecdb0dd84a4a643acd5a0eaadf413eadda21e4bcea18ae389ce011"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/Monitor.lst",
+    "archived": "archive/validation/RVMDK-list-history/Monitor.lst",
+    "sha256": "7bd197c5e83b29a6d05c799e84faa17151cc48eef06117dc7f641c2a3eac8c6e"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/Monitor.obj",
+    "archived": "archive/validation/RVMDK-list-history/Monitor.obj",
+    "sha256": "b8e97537559ae98e78870e3072a90c3439da020e937abc42fe2146d3ccdfc082"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/README-smoke.txt",
+    "archived": "archive/validation/RVMDK-list-history/README-smoke.txt",
+    "sha256": "bc2f541cc6104954dd1b8596f71406d74279b6bfe345551c25e0b64a24ac1a38"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/stc8g1k08_monitor",
+    "archived": "archive/validation/RVMDK-list-history/stc8g1k08_monitor",
+    "sha256": "a62c20d6ee921293aebc6bc6b14a4cf350cfd5ff666c9268d5edc5d4b7bbd75b"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/stc8g1k08_monitor.build_log.htm",
+    "archived": "archive/validation/RVMDK-list-history/stc8g1k08_monitor.build_log.htm",
+    "sha256": "62851f4c7810d283f040b4ab1e1afd83d3fd2d10bf7157bc4fac8872ba284389"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/stc8g1k08_monitor.hex",
+    "archived": "archive/validation/RVMDK-list-history/stc8g1k08_monitor.hex",
+    "sha256": "eb453ea816a94da4584504bca9bb04b7017f51da1bfa2c2cddaee23329ee6931"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/stc8g1k08_monitor.lnp",
+    "archived": "archive/validation/RVMDK-list-history/stc8g1k08_monitor.lnp",
+    "sha256": "9a965592f0d666da29215d4c2362f054219efb28159e00d356a6b4a5ba5da3a9"
+  },
+  {
+    "original": "firmware/validation/RVMDK-list-history/stc8g1k08_monitor.m51",
+    "archived": "archive/validation/RVMDK-list-history/stc8g1k08_monitor.m51",
+    "sha256": "1f11a237495d18584062f4a9efdc64b2e69d8a200e7efec980759ef7bd8f64c1"
+  },
+  {
+    "original": "firmware/validation/STC8G1K08-MONITOR.uvproj",
+    "archived": "archive/validation/STC8G1K08-MONITOR.uvproj",
+    "sha256": "e325fb153a15e600a34ac98257457022e837849dd14301b2505171eeefe01523"
+  },
+  {
+    "original": "firmware/validation/STC8G1K08-MONITOR.uvproj.orig",
+    "archived": "archive/validation/STC8G1K08-MONITOR.uvproj.orig",
+    "sha256": "9b863487d2e9db1a6f57bb55ab36b233de489893b4e1329f9f8b1d262f0a8045"
+  },
+  {
+    "original": "firmware/validation/STC8G1K08-SMOKE.uvproj",
+    "archived": "archive/validation/STC8G1K08-SMOKE.uvproj",
+    "sha256": "a819cc41348e719f4c217892cad570f6fa5eb59e28d660aa4972f252361673f7"
+  },
+  {
+    "original": "firmware/validation/heartbeat_monitor.h.orig",
+    "archived": "archive/validation/heartbeat_monitor.h.orig",
+    "sha256": "2d1f7fba22fedc8a867783f8770a6aad6d3a6412272fa8bce7d5b7de08a88ede"
+  },
+  {
+    "original": "firmware/validation/legacy/Driver/inc/cpu_check_command_decoder.h",
+    "archived": "archive/validation/legacy/Driver/inc/cpu_check_command_decoder.h",
+    "sha256": "f2b65e7d542de1324049edce0c482a70b5c88e0667a19f2d8b42473ef856f724"
+  },
+  {
+    "original": "firmware/validation/legacy/Driver/inc/maintenance_controller.h",
+    "archived": "archive/validation/legacy/Driver/inc/maintenance_controller.h",
+    "sha256": "f3a4bea3bc1c5cf382763f29383528cd6161b17aac13ee9585f45f7425aa736b"
+  },
+  {
+    "original": "firmware/validation/legacy/Driver/src/cpu_check_command_decoder.c",
+    "archived": "archive/validation/legacy/Driver/src/cpu_check_command_decoder.c",
+    "sha256": "bff5ba06f2032edb303df2fbcb5c3dd98fa674c24933fbaa80504d68fb9a2c25"
+  },
+  {
+    "original": "firmware/validation/legacy/Driver/src/maintenance_controller.c",
+    "archived": "archive/validation/legacy/Driver/src/maintenance_controller.c",
+    "sha256": "ebca4a5394430bf73ca52ca92320158bb5c0f3908be4f8daebc31299578a7249"
+  },
+  {
+    "original": "firmware/validation/legacy/cpu_check_command_decoder_test.c",
+    "archived": "archive/validation/legacy/cpu_check_command_decoder_test.c",
+    "sha256": "e5d8ac3c10ab8b028b52880223258e22ee4e1758c236ad7aefcd6402db30d994"
+  },
+  {
+    "original": "firmware/validation/legacy/debug/debug_exit.c",
+    "archived": "archive/validation/legacy/debug/debug_exit.c",
+    "sha256": "1aff990601cabecde7c98ef1643ad7a6a95d409f19bc7c23629780e29b3108dc"
+  },
+  {
+    "original": "firmware/validation/legacy/debug/debug_exit2.c",
+    "archived": "archive/validation/legacy/debug/debug_exit2.c",
+    "sha256": "875b715e038305435866b2f3f720be3a1071828601a3c5db1eee8cfeb2d7e9a5"
+  },
+  {
+    "original": "firmware/validation/legacy/debug/debug_exit3.c",
+    "archived": "archive/validation/legacy/debug/debug_exit3.c",
+    "sha256": "905c6fd8bffe509653cb3254e39d65e215780655099df674e0c63416b8eb75c2"
+  },
+  {
+    "original": "firmware/validation/legacy/debug/debug_mrt.c",
+    "archived": "archive/validation/legacy/debug/debug_mrt.c",
+    "sha256": "1b54142f0a19917b71fe3a289ed387b1c18ae97e11c33cb0f32a7b579d58f52e"
+  },
+  {
+    "original": "firmware/validation/legacy/debug/maintenance_runtime_integration_example.c",
+    "archived": "archive/validation/legacy/debug/maintenance_runtime_integration_example.c",
+    "sha256": "f49a05f5c2d87e7657e7cec83fa2330c14edc9d090ea06fa50c3dd5536bc1657"
+  },
+  {
+    "original": "firmware/validation/legacy/maintenance_controller_test.c",
+    "archived": "archive/validation/legacy/maintenance_controller_test.c",
+    "sha256": "9dac990436ad5973a07c1c47597da74e8849966527e8d00c9e22138b51b00a8b"
+  },
+  {
+    "original": "firmware/validation/legacy/run_cpu_check_command_decoder_test.sh",
+    "archived": "archive/validation/legacy/run_cpu_check_command_decoder_test.sh",
+    "sha256": "80ff777e85176f6e83aac533b613e746d7fe61ce9b665e15c9ce4a3fbeb4c289"
+  },
+  {
+    "original": "firmware/validation/legacy/run_maintenance_controller_test.sh",
+    "archived": "archive/validation/legacy/run_maintenance_controller_test.sh",
+    "sha256": "837e7826b89cbdf2cd11f0f3c070e81ac11ed5e7ae6bbd5ea2e85a5473e79d01"
+  },
+  {
+    "original": "firmware/validation/monitor_firmware_static_test.sh",
+    "archived": "archive/validation/monitor_firmware_static_test.sh",
+    "sha256": "4e405f29153c95071aecd058c74cb4f285e5a274b098193598a125442cd7d0b4"
+  },
+  {
+    "original": "firmware/validation/smoke_firmware_static_test.sh",
+    "archived": "archive/validation/smoke_firmware_static_test.sh",
+    "sha256": "66e1cf028d81a81a14121f7eb87ba9d02f3e63e37c2b8be29fe5c96eb33548f2"
+  },
+  {
+    "original": "firmware/validation/stc8g1k08_regs.h.smoke.orig",
+    "archived": "archive/validation/stc8g1k08_regs.h.smoke.orig",
+    "sha256": "ea609ff8ab43c43bf890f67e2a9f8a8becd8ce16412b34296ae87f9eb5f37057"
+  },
+  {
+    "original": "firmware/validation/验证记录-历史.md",
+    "archived": "archive/validation/验证记录-历史.md",
+    "sha256": "5e28bc6e8d92ad949ffccf173b9d7fc01d7e50918e62cbac64744689bfd7bbd8"
+  },
+  {
+    "original": "firmware/RVMDK/list/README.txt",
+    "archived": "archive/build-output/README.txt",
+    "sha256": "3e1d9557678b5d77def2ff775b63728ccc05924ab8fd723612e14a4aa2ab534c"
+  },
+  {
+    "original": "firmware/RVMDK/list/heartbeat_monitor.lst",
+    "archived": "archive/build-output/heartbeat_monitor.lst",
+    "sha256": "dfa937388dd166ef46e321f77153950e8f4889cde9a895492b0fa08ecbf4ea96"
+  },
+  {
+    "original": "firmware/RVMDK/list/heartbeat_monitor.obj",
+    "archived": "archive/build-output/heartbeat_monitor.obj",
+    "sha256": "864eddb00414eadc4d88af55dc5243fea4a7f0077691e4739ab7fe9cd4aec966"
+  },
+  {
+    "original": "firmware/RVMDK/list/main.lst",
+    "archived": "archive/build-output/main.lst",
+    "sha256": "cfda0560c4fbf680186f7fd6e3c54e93334bb137a8277287370e8b9893e8ad72"
+  },
+  {
+    "original": "firmware/RVMDK/list/main.obj",
+    "archived": "archive/build-output/main.obj",
+    "sha256": "85aa94e34fda22757122886a81b7823d666e92e849ec8383f3b11ab0a377a985"
+  },
+  {
+    "original": "firmware/RVMDK/list/maintenance_runtime.lst",
+    "archived": "archive/build-output/maintenance_runtime.lst",
+    "sha256": "3bc2a59e996905236b4d95d25e6d7fc3a6bf7ed95c10ba6c06c3080e962b4c0f"
+  },
+  {
+    "original": "firmware/RVMDK/list/maintenance_runtime.obj",
+    "archived": "archive/build-output/maintenance_runtime.obj",
+    "sha256": "c1dd03d9e0aeae8f93e095aedfa988aeec3b43e05027a28540bde03044ae803a"
+  },
+  {
+    "original": "firmware/RVMDK/list/reset_controller.lst",
+    "archived": "archive/build-output/reset_controller.lst",
+    "sha256": "1f7aeeb312e953f05c5ae754d575976c4f961a513cd4b3b588e9a280ee77e2b1"
+  },
+  {
+    "original": "firmware/RVMDK/list/reset_controller.obj",
+    "archived": "archive/build-output/reset_controller.obj",
+    "sha256": "18357cc73f8dfef02be19f795d3acabca19e95fba57a4ab62096ca7f6b4915b9"
+  },
+  {
+    "original": "firmware/RVMDK/list/stc8g1k08_reset",
+    "archived": "archive/build-output/stc8g1k08_reset",
+    "sha256": "cb57b3856971eb158990205b4e1f7c157496b503aa184d7266dbc41d3ce8608e"
+  },
+  {
+    "original": "firmware/RVMDK/list/stc8g1k08_reset.build_log.htm",
+    "archived": "archive/build-output/stc8g1k08_reset.build_log.htm",
+    "sha256": "5da79b8dce004fa5a975c9fcb84831e0373eeb97e01bfaa18b837997c7dc74d9"
+  },
+  {
+    "original": "firmware/RVMDK/list/stc8g1k08_reset.hex",
+    "archived": "archive/build-output/stc8g1k08_reset.hex",
+    "sha256": "0854ca136215cfc9e34ccce5b4501950affe32dff5502ea09907fb301da915af"
+  },
+  {
+    "original": "firmware/RVMDK/list/stc8g1k08_reset.lnp",
+    "archived": "archive/build-output/stc8g1k08_reset.lnp",
+    "sha256": "a46c9de0691528c99219d03563ca759357cbe25c008d191016e4ae368ca42876"
+  },
+  {
+    "original": "firmware/RVMDK/list/stc8g1k08_reset.m51",
+    "archived": "archive/build-output/stc8g1k08_reset.m51",
+    "sha256": "c267ce54a172f7b19dc0cfce933af004bf66b750afa8b893768ebe98edd6dba1"
+  },
+  {
+    "original": "firmware/RVMDK/list/uart.lst",
+    "archived": "archive/build-output/uart.lst",
+    "sha256": "00fdaf588c73649539e1decc23c761dad1d0ab8aa9c5579c3c89bcf33faf4280"
+  },
+  {
+    "original": "firmware/RVMDK/list/uart.obj",
+    "archived": "archive/build-output/uart.obj",
+    "sha256": "ff411473d281a0e09b11e269bf9676425ab99334add0f100e1c34a55c0fa45bb"
+  },
+  {
+    "original": "firmware/RVMDK/STC8G1K08-RESET.uvopt",
+    "archived": "archive/ide-state/STC8G1K08-RESET.uvopt",
+    "sha256": "46b967562a81116fd98686ad75fe03a05703d10027ab8c300eeac780031c3736"
+  },
+  {
+    "original": "firmware/RVMDK/STC8G1K08-RESET.uvgui.Administrator",
+    "archived": "archive/ide-state/STC8G1K08-RESET.uvgui.Administrator",
+    "sha256": "4530706437004463e539e9f62f4ea09e559fe39027fe82dba43fa0e6410d509d"
+  },
+  {
+    "original": "MAINTENANCE_MODE_DIAGNOSIS.md",
+    "archived": "archive/work-notes/MAINTENANCE_MODE_DIAGNOSIS.md",
+    "sha256": "3f5df887561638b866bdaad80f146b9dc0f03798637604a2d89047c177083be7"
+  },
+  {
+    "original": "MAINTENANCE_RUNTIME_SUMMARY.md",
+    "archived": "archive/work-notes/MAINTENANCE_RUNTIME_SUMMARY.md",
+    "sha256": "8f804d24f0fd95cf3a77f23c978a32edbe3fc310b1eceef0765ec49be49d54da"
+  },
+  {
+    "original": "V1.0.4_BOARD_VALIDATION_GUIDE.md",
+    "archived": "archive/work-notes/V1.0.4_BOARD_VALIDATION_GUIDE.md",
+    "sha256": "67818ccb26418015462420e6d50328345a5e785cc07b18e23003772853623f2e"
+  },
+  {
+    "original": "V1.0.4_BUILD_SUCCESS.md",
+    "archived": "archive/work-notes/V1.0.4_BUILD_SUCCESS.md",
+    "sha256": "512c7fb7b2b6735fd56e6fb044afdf02a9b67e2062405f34642c7c77a5350872"
+  },
+  {
+    "original": "V1.0.4_INTEGRATION_COMPLETE.md",
+    "archived": "archive/work-notes/V1.0.4_INTEGRATION_COMPLETE.md",
+    "sha256": "cc8c05a4d151d8b6ce6a3fb48dffe9cbb0e9dc8a936aeec504b8cef0e9398ad7"
+  },
+  {
+    "original": "findings.md",
+    "archived": "archive/work-notes/findings.md",
+    "sha256": "61ef721fd6fb94a7a14766125fbd1cfce4f6391c301dac351602f2d95c9c773b"
+  },
+  {
+    "original": "progress.md",
+    "archived": "archive/work-notes/progress.md",
+    "sha256": "1ce882bc67098abcd69b07076d2ab46a54c4d88fe47af548f4f9dc95f2639fa2"
+  },
+  {
+    "original": "task_plan.md",
+    "archived": "archive/work-notes/task_plan.md",
+    "sha256": "77b518449f157f22cd86cde309cc642878fe254e0037de5d1db5580a174cd118"
+  }
+]

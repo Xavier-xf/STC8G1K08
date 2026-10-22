@@ -3,14 +3,9 @@
 #include "reset_controller.h"
 #include "maintenance_runtime.h"
 #include "uart.h"
+static unsigned char monitor_enabled;
 
-/*
- * STC8G1K08 正式外部复位固件
- *
- * P5.4/INT2 只接收 CPU_CHECK 下降沿。
- * P5.5 初始化为推挽输出：低电平保持通电，高电平触发复位。
- * 复位脉冲结束、监测停止及启动宽限期间均保持低电平。
- */
+/* P5.5 remains push-pull: low powers the target, high requests reset. */
 
 #define P5_CPU_CHECK_MASK 0x10
 #define P5_AP_RESET_MASK 0x20
@@ -20,7 +15,6 @@
 static volatile heartbeat_monitor_ms_t g_millisecond;
 static heartbeat_monitor_t g_heartbeat_monitor;
 static reset_controller_t g_reset_controller;
-static maintenance_runtime_t g_maintenance_runtime;
 static unsigned char g_reset_output_active;
 
 static void timer0_init(void)
@@ -101,19 +95,6 @@ static void heartbeat_snapshot(heartbeat_monitor_t *snapshot,
     EA = 0;
     *now_ms = g_millisecond;
     *snapshot = g_heartbeat_monitor;
-    EA = saved_ea;
-}
-
-static void maintenance_runtime_snapshot(
-    maintenance_runtime_event_t *event,
-    maintenance_runtime_mode_t *mode,
-    heartbeat_monitor_ms_t now_ms)
-{
-    unsigned char saved_ea = EA;
-
-    EA = 0;
-    *event = maintenance_runtime_poll(&g_maintenance_runtime, now_ms);
-    *mode = maintenance_runtime_mode(&g_maintenance_runtime);
     EA = saved_ea;
 }
 
@@ -198,17 +179,17 @@ void timer0_isr(void) interrupt 1
     TH0 = (unsigned char)(TIMER0_RELOAD >> 8);
     TL0 = (unsigned char)TIMER0_RELOAD;
     ++g_millisecond;
+    maintenance_runtime_tick();
 }
 
 void int2_isr(void) interrupt 10
 {
     heartbeat_monitor_ms_t now_ms = g_millisecond;
 
-    /* 1. 先更新心跳监控（AP_RESET 决策的关键数据）*/
-    heartbeat_monitor_on_falling_edge(&g_heartbeat_monitor, now_ms);
+    unsigned int age_ms = maintenance_runtime_on_falling_edge((unsigned int)now_ms);
 
-    /* 2. 再交给维护协议解码器（不影响心跳记录）*/
-    maintenance_runtime_on_falling_edge(&g_maintenance_runtime, now_ms);
+    if (age_ms)
+        heartbeat_monitor_on_falling_edge(&g_heartbeat_monitor, now_ms - age_ms);
 }
 static void app_init(void)
 {
@@ -231,10 +212,8 @@ static void app_init(void)
     timer0_init();
     heartbeat_monitor_init(&g_heartbeat_monitor, 0UL);
     reset_controller_init(&g_reset_controller, 0UL);
-    maintenance_runtime_init(&g_maintenance_runtime, 0UL);
-    maintenance_runtime_set_active(&g_maintenance_runtime,
-                                   (unsigned char)(wdt_reset != 0U &&
-                                                   power_or_lvd_reset == 0U));
+    maintenance_runtime_init();
+    monitor_enabled = (unsigned char)(wdt_reset != 0U && power_or_lvd_reset == 0U);
     g_reset_output_active = 0U;
     INT_CLKO |= INT2_ENABLE_MASK;
     wdt_init();
@@ -242,6 +221,7 @@ static void app_init(void)
 
 #if STC8G1K08_UART_LOG_ENABLE
     uart1_puts("\r\nSTC8G1K08 reset firmware v" STC8G1K08_FIRMWARE_VERSION "\r\n");
+    uart1_puts("protocol=short-frame 3/5 bytes\r\n");
     uart1_puts("P54=CPU_CHECK INT2 falling edge\r\n");
     uart1_puts("P55=LOW power-on, HIGH reset, WDT=ON\r\n");
     uart1_puts("grace=30000ms timeout=5000ms pulse=200ms wdt=128x\r\n");
@@ -255,37 +235,42 @@ static void app_run(void)
     heartbeat_monitor_ms_t now_ms;
     heartbeat_monitor_t heartbeat;
     heartbeat_monitor_status_t heartbeat_status;
-    maintenance_runtime_event_t mrt_event;
-    maintenance_runtime_mode_t mrt_mode;
+    unsigned char command;
+    unsigned char reply_result;
+    unsigned char reply_status;
 
     last_report = millis_snapshot();
     for (;;) {
         heartbeat_snapshot(&heartbeat, &now_ms);
 
-        /* 轮询维护运行时事件 */
-        maintenance_runtime_snapshot(&mrt_event, &mrt_mode, now_ms);
-
-        /* 处理维护模式事件 */
-        if (mrt_event == MRT_EVENT_START) {
-#if STC8G1K08_UART_LOG_ENABLE
-            uart1_puts("MNT START\r\n");
-#endif
-            /* 启动监测时重新开始 30 秒宽限期。 */
-            app_resume_normal(now_ms);
-            wdt_clear();
-            continue;
-        } else if (mrt_event == MRT_EVENT_STOP) {
-#if STC8G1K08_UART_LOG_ENABLE
-            uart1_puts("MNT STOP\r\n");
-#endif
-            /* 停止监测时保持 AP_RESET 低电平通电，状态永久保持停止。 */
-            app_resume_normal(now_ms);
-            wdt_clear();
-            continue;
+        EA = 0;
+        command = maintenance_runtime_poll();
+        EA = 1;
+        if (command) {
+            reply_result = MRT_RESULT_OK;
+            if (command == MRT_COMMAND_START) {
+                if (!monitor_enabled) {
+                    monitor_enabled = 1U;
+                    app_resume_normal(now_ms);
+                    heartbeat_snapshot(&heartbeat, &now_ms);
+                }
+            } else if (command == MRT_COMMAND_STOP) {
+                monitor_enabled = 0U;
+                g_reset_output_active = 0U;
+                ap_reset_release();
+            } else if (command != MRT_COMMAND_READ) {
+                reply_result = MRT_RESULT_INVALID;
+            }
+            reply_status = monitor_enabled ? MRT_STATUS_ENABLED : 0U;
+            if (heartbeat.edge_seen) reply_status |= MRT_STATUS_HEARTBEAT;
+            if (monitor_enabled)
+                reply_status |= (unsigned char)((g_reset_controller.state + 1U) << MRT_STATUS_PHASE_SHIFT);
+            EA = 0;
+            maintenance_runtime_reply(reply_result, reply_status);
+            EA = 1;
         }
-
         /* 监测停止：AP_RESET 保持低电平通电，内部 WDT 继续运行。 */
-        if (mrt_mode != MRT_MODE_MAINTENANCE) {
+        if (!monitor_enabled) {
             if (g_reset_output_active != 0U) {
                 apply_reset_output(0U);
             }

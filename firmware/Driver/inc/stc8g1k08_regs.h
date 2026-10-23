@@ -52,17 +52,22 @@ sbit EA = IE^7;
 sbit RI = SCON^0;
 sbit TI = SCON^1;
 
-/* Reset-cause masks. These SFRs are not bit-addressable on C51. */
+/* 复位原因标志所在 SFR 不可位寻址，只能按字节掩码读写。 */
 #define PCON_POF_MASK 0x10U
 #define PCON_LVDF_MASK 0x20U
 #define WDT_FLAG_MASK 0x80U
 
 /*
+ * 中断优先级寄存器（IP/IPH 等）有意不定义：Timer0 与 INT2 必须保持同一
+ * 默认优先级、互不嵌套。INT2 中读取 32 位毫秒计数和链路状态依赖这一点。
+ */
+
+/*
  * 板级信号定义：
- * Pin1/P5.4 是 CPU_CHECK 输入；
+ * Pin1/P5.4 是 CPU_CHECK 单线链路，由 cpu_check_link 独占配置；
  * Pin3/P5.5 是 AP-RESET 控制脚，低电平通电，高电平复位，持续推挽驱动。
  */
 sbit CPU_CHECK = P5^4;
-sbit AP_RESET_TEST = P5^5;
+sbit AP_RESET = P5^5;
 
 #endif

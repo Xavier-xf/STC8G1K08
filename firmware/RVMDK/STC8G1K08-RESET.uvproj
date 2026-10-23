@@ -384,9 +384,9 @@
               <FilePath>..\Driver\src\reset_controller.c</FilePath>
             </File>
             <File>
-              <FileName>maintenance_runtime.c</FileName>
+              <FileName>cpu_check_link.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Driver\src\maintenance_runtime.c</FilePath>
+              <FilePath>..\Driver\src\cpu_check_link.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -6,22 +6,32 @@
  * 本版按 24 MHz 编译；如果 ISP 使用了其他频率，必须同步修改并重新计算
  * Timer0 的 1 ms 时基和 UART1 的 9600 baud 重载值。
  */
-#define STC8G1K08_FIRMWARE_VERSION "1.1.0"
+#define STC8G1K08_FIRMWARE_VERSION "1.2.0"
 #define STC8G1K08_UART_LOG_ENABLE 1U
 #define MAIN_FOSC 24000000UL
 #define UART_BAUDRATE 9600UL
 #define TIMER0_TICK_HZ 1000UL
-#define HEARTBEAT_MONITOR_GRACE_MS 10000UL
-#define HEARTBEAT_MONITOR_TIMEOUT_MS 5000UL
+
+/* START 后的开机宽限；只在 STARTUP 阶段生效。 */
 #define RESET_HEARTBEAT_GRACE_MS 30000UL
+/* 监测期间连续无有效心跳达到该时间即复位主机。 */
+#define HEARTBEAT_MONITOR_TIMEOUT_MS 5000UL
+/*
+ * 复位脉冲结束后等待心跳恢复的窗口，超时未恢复则再次复位，持续重复。
+ * 实测从复位到心跳恢复约 43 s；取值应不小于量产镜像最坏实测值的 2 倍，
+ * 过短会在正常开机过程中反复复位。
+ */
+#define RESET_RECOVERY_WINDOW_MS 120000UL
+
 #define INT2_ENABLE_MASK 0x10
 /* 新电路：P5.5 持续拉低通电，拉高复位，脉冲结束后恢复低电平。 */
 #define AP_RESET_ASSERT_LEVEL 1U
 #define AP_RESET_PULSE_MS 200UL
 #define WDT_ENABLE_MASK 0x20
 #define WDT_CLEAR_MASK 0x10
-/* 6 = 128 分频，约 2.1 s @ 24 MHz。 */
+/* 6 = 128 分频，约 2.1 s @ 24 MHz；日志线上发送上界约 165 ms，另需实测执行余量。 */
 #define WDT_PRESCALE 6U
+#define WDT_DIVIDER (2UL << WDT_PRESCALE)
 
 #define TIMER0_RELOAD (65536UL - (MAIN_FOSC / TIMER0_TICK_HZ))
 #define UART1_RELOAD (65536UL - ((MAIN_FOSC / 4UL) / UART_BAUDRATE))

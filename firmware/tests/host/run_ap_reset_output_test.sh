@@ -15,15 +15,17 @@ import sys
 
 source = pathlib.Path(sys.argv[1]).read_text()
 parts = []
-for name in ("P5_CPU_CHECK_MASK", "P5_AP_RESET_MASK",
-             "P3_UART_RX_MASK", "P3_UART_TX_MASK"):
+if re.search(r"^#define P5_CPU_CHECK_MASK\b", source, re.M):
+    raise SystemExit("P5.4 belongs to cpu_check_link; main.c must not define its mask")
+for name in ("P5_AP_RESET_MASK", "P3_UART_RX_MASK", "P3_UART_TX_MASK"):
     match = re.search(r"^#define " + name + r" .+$", source, re.M)
     if match is None:
         raise SystemExit("missing GPIO mask: " + name)
     parts.append(match.group())
-for name in ("ap_reset_release", "ap_reset_assert", "gpio_reset_init",
-             "app_resume_normal", "apply_reset_output"):
-    match = re.search(r"^static void " + name + r"\([^)]*\)\n\{\n.*?^\}",
+for name in ("ap_reset_release", "ap_reset_assert", "gpio_board_init",
+             "monitor_restart", "reset_grace_ms", "apply_reset_output",
+             "heartbeat_status_name", "reset_state_name", "app_report"):
+    match = re.search(r"^static [\w *]+?" + name + r"\([^)]*\)\n\{\n.*?^\}",
                       source, re.M | re.S)
     if match is None:
         raise SystemExit("missing GPIO function: " + name)

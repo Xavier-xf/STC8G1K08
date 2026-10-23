@@ -55,6 +55,30 @@ static int test_timeout_and_recovery(void)
     return ok;
 }
 
+static int test_zero_grace_never_reports_startup(void)
+{
+    heartbeat_monitor_t monitor;
+    int ok = 1;
+
+    /* Outside STARTUP the caller passes grace 0: a wrapped start age cannot hide a timeout. */
+    heartbeat_monitor_init(&monitor, 0UL);
+    ok &= expect(heartbeat_monitor_status(&monitor, 0UL, 0UL, 5000UL) ==
+                     HEARTBEAT_MONITOR_TIMEOUT,
+                 "zero grace without an edge is a timeout immediately");
+    heartbeat_monitor_on_falling_edge(&monitor, 0xffffe000UL);
+    ok &= expect(heartbeat_monitor_status(&monitor, 0x00000010UL, 0UL, 5000UL) ==
+                     HEARTBEAT_MONITOR_TIMEOUT,
+                 "zero grace keeps timeout after the start age wraps");
+    ok &= expect(heartbeat_monitor_status(&monitor, 0x00000010UL, 30000UL, 5000UL) ==
+                     HEARTBEAT_MONITOR_STARTUP,
+                 "a constant grace would re-enter startup after the wrap");
+    heartbeat_monitor_on_falling_edge(&monitor, 0x00000010UL);
+    ok &= expect(heartbeat_monitor_status(&monitor, 0x00000020UL, 0UL, 5000UL) ==
+                     HEARTBEAT_MONITOR_HEALTHY,
+                 "zero grace still reports a recent edge as healthy");
+    return ok;
+}
+
 static int test_millisecond_rollover(void)
 {
     heartbeat_monitor_t monitor;
@@ -79,6 +103,7 @@ int main(void)
 
     ok &= test_grace_and_healthy_state();
     ok &= test_timeout_and_recovery();
+    ok &= test_zero_grace_never_reports_startup();
     ok &= test_millisecond_rollover();
     if (!ok) return 1;
     puts("OK: heartbeat monitor state test passed");

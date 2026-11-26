@@ -227,7 +227,7 @@ static void app_init(void)
 #if STC8G1K08_UART_LOG_ENABLE
     /* 约 220 ms；上电后最早的完整请求帧也需 600 ms 以上，不会与交接期限冲突。 */
     uart1_puts("\r\nSTC8G1K08 reset firmware v" STC8G1K08_FIRMWARE_VERSION "\r\n");
-    uart1_puts("protocol=short-frame 3/5 bytes\r\n");
+    uart1_puts("protocol=short-frame 3/3 bytes\r\n");
     uart1_puts("P54=CPU_CHECK INT2 falling edge\r\n");
 #if AP_RESET_ASSERT_LEVEL != 0U
     uart1_puts("P55=LOW power-on, HIGH reset, WDT=ON\r\n");

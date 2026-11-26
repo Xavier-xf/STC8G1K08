@@ -11,7 +11,7 @@ unsigned char P5, P5M0, P5M1;
  * Keep a separate elapsed clock so expected wire intervals cannot wrap too. */
 static uint16_t clock_ms;
 static uint32_t elapsed_ms;
-static uint32_t reply_edges[43];
+static uint32_t reply_edges[27];
 static unsigned int reply_edge_count;
 static unsigned int wraps;
 
@@ -88,11 +88,11 @@ static void send_request(unsigned char command, unsigned char sequence)
 
     bytes[2] = crc8(bytes, 2U);
     assert(host_edge(0U) == 0U);
-    assert(host_edge(400U) == 0U);
-    assert(host_edge(32U) == 0U);
+    assert(host_edge(130U) == 0U);
+    assert(host_edge(100U) == 0U);
     for (index = 0U; index < sizeof(bytes); ++index) {
         for (bit = 0U; bit < 8U; ++bit) {
-            assert(host_edge((bytes[index] & (0x80U >> bit)) ? 14U : 8U) == 0U);
+            assert(host_edge((bytes[index] & (0x80U >> bit)) ? 70U : 40U) == 0U);
         }
     }
 }
@@ -100,13 +100,12 @@ static void send_request(unsigned char command, unsigned char sequence)
 static void expect_reply(unsigned char command, unsigned char sequence,
                          unsigned char result, unsigned char status)
 {
-    unsigned char decoded[5] = {0U};
-    unsigned char expected[5] = {(unsigned char)(command | 0x80U), sequence,
-                                 result, status, 0U};
+    unsigned char decoded[3] = {0U};
+    unsigned char expected[3] = {(unsigned char)((command << 6) | (result << 5) | status), sequence, 0U};
     uint32_t start = elapsed_ms;
     unsigned int bit;
 
-    expected[4] = crc8(expected, 4U);
+    expected[2] = crc8(expected, 2U);
     reply_edge_count = 0U;
     cpu_check_link_reply(result, status);
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
@@ -114,17 +113,17 @@ static void expect_reply(unsigned char command, unsigned char sequence,
     assert(reply_edge_count == 0U && line_high());
     advance(1U);
     assert(reply_edge_count == 1U && !line_high());
-    advance(1500U);
-    assert(reply_edge_count == 43U && line_high());
+    advance(2100U);
+    assert(reply_edge_count == 27U && line_high());
     assert(reply_edges[0] - start == 100U);
-    assert(reply_edges[1] - reply_edges[0] == 400U);
-    assert(reply_edges[2] - reply_edges[1] == 32U);
-    for (bit = 0U; bit < 40U; ++bit) {
+    assert(reply_edges[1] - reply_edges[0] == 130U);
+    assert(reply_edges[2] - reply_edges[1] == 100U);
+    for (bit = 0U; bit < 24U; ++bit) {
         uint32_t interval = reply_edges[bit + 3U] - reply_edges[bit + 2U];
 
-        assert(interval == 8U || interval == 14U);
+        assert(interval == 40U || interval == 70U);
         decoded[bit / 8U] = (unsigned char)((decoded[bit / 8U] << 1) |
-                                           (interval == 14U));
+                                           (interval == 70U));
     }
     assert(memcmp(decoded, expected, sizeof(expected)) == 0);
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
@@ -188,8 +187,8 @@ static void test_timeouts_at_wrap(void)
         unsigned int lead;
 
         switch (scenario) {
-        case 0U: timeout = 35U; lead = 400U; break;
-        case 1U: timeout = 17U; lead = 400U + 32U + 8U; break;
+        case 0U: timeout = 111U; lead = 130U; break;
+        case 1U: timeout = 81U; lead = 130U + 100U + 40U; break;
         case 2U: timeout = 250U; lead = 0U; break;
         case 3U: timeout = 100U; lead = 0U; break;
         default: timeout = 1000U; lead = 0U; break;
@@ -206,10 +205,10 @@ static void test_timeouts_at_wrap(void)
             if (scenario == 3U) assert(cpu_check_link_poll() == LINK_COMMAND_READ);
         } else {
             assert(host_edge(0U) == 0U);
-            if (scenario != 4U) assert(host_edge(400U) == 0U);
+            if (scenario != 4U) assert(host_edge(130U) == 0U);
             if (scenario == 1U) {
-                assert(host_edge(32U) == 0U);
-                assert(host_edge(8U) == 0U);
+                assert(host_edge(100U) == 0U);
+                assert(host_edge(40U) == 0U);
             }
         }
         advance(timeout - 1U);
@@ -236,8 +235,8 @@ static void test_full_wrap_idle_does_not_reuse_stale_edge(void)
     assert(host_edge(200U) == 200U);
     advance(65536U);
     /* Modulo age looks like a heartbeat/break, but the idle timer forgot it. */
-    assert(host_edge(400U) == 0U);
-    assert(host_edge(32U) == 0U);
+    assert(host_edge(130U) == 0U);
+    assert(host_edge(100U) == 0U);
     assert(host_edge(200U) == 200U);
     assert(reply_edge_count == 0U && cpu_check_link_poll() == LINK_COMMAND_NONE);
 }

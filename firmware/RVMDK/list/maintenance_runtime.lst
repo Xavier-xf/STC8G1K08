@@ -1,0 +1,236 @@
+C51 COMPILER V9.54   MAINTENANCE_RUNTIME                                                   10/22/2026 14:17:11 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAINTENANCE_RUNTIME
+OBJECT MODULE PLACED IN .\list\maintenance_runtime.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Driver\src\maintenance_runtime.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\U
+                    -ser;..\Driver\inc) DEBUG OBJECTEXTEND PRINT(.\list\maintenance_runtime.lst) TABS(2) OBJECT(.\list\maintenance_runtime.ob
+                    -j)
+
+line level    source
+
+   1          #include "maintenance_runtime.h"
+   2          
+   3          #ifdef MAINTENANCE_RUNTIME_HOST_TEST
+              #include <stdint.h>
+              typedef uint16_t mrt_tick_t;
+              extern unsigned char P5, P5M0, P5M1;
+              #else
+   8          #include "Config.h"
+   9          typedef unsigned int mrt_tick_t;
+  10          #endif
+  11          
+  12          #define MRT_IDLE 0U
+  13          #define MRT_SYNC 1U
+  14          #define MRT_RECEIVE 2U
+  15          #define MRT_READY 3U
+  16          #define MRT_EXECUTING 4U
+  17          #define MRT_TX_WAIT 5U
+  18          #define MRT_TX_BREAK_LOW 6U
+  19          #define MRT_TX_BREAK_HIGH 7U
+  20          #define MRT_TX_SYNC_LOW 8U
+  21          #define MRT_TX_SYNC_HIGH 9U
+  22          #define MRT_TX_DATA_LOW 10U
+  23          #define MRT_TX_DATA_HIGH 11U
+  24          
+  25          static volatile unsigned char frame[5];
+  26          static volatile unsigned char state;
+  27          static volatile unsigned char bit_count;
+  28          static volatile unsigned char have_edge;
+  29          static volatile mrt_tick_t last_edge_ms;
+  30          static volatile mrt_tick_t delay_ms;
+  31          
+  32          /* Only Timer0 calls this; no main-loop/ISR overlay sharing. */
+  33          static void line_write(unsigned char high)
+  34          {
+  35   1          if (high) {
+  36   2              P5M1 |= 0x10U;
+  37   2              P5M0 &= (unsigned char)~0x10U;
+  38   2              P5 |= 0x10U;
+  39   2          } else {
+  40   2              P5 &= (unsigned char)~0x10U;
+  41   2              P5M1 |= 0x10U;
+  42   2              P5M0 |= 0x10U;
+  43   2          }
+  44   1      }
+  45          
+  46          static unsigned char frame_crc(unsigned char size)
+  47          {
+  48   1          unsigned char crc = 0U;
+  49   1          unsigned char index;
+  50   1          unsigned char shift;
+  51   1      
+  52   1          for (index = 0U; index < size; ++index) {
+  53   2              crc ^= frame[index];
+C51 COMPILER V9.54   MAINTENANCE_RUNTIME                                                   10/22/2026 14:17:11 PAGE 2   
+
+  54   2              for (shift = 0U; shift < 8U; ++shift) {
+  55   3                  if (crc & 0x80U) crc = (unsigned char)((crc << 1) ^ 0x07U);
+  56   3                  else crc = (unsigned char)(crc << 1);
+  57   3              }
+  58   2          }
+  59   1          return crc;
+  60   1      }
+  61          
+  62          void maintenance_runtime_init(void)
+  63          {
+  64   1          state = MRT_IDLE;
+  65   1          bit_count = 0U;
+  66   1          have_edge = 0U;
+  67   1          last_edge_ms = 0U;
+  68   1          delay_ms = 0U;
+  69   1          P5M1 |= 0x10U;
+  70   1          P5M0 &= (unsigned char)~0x10U;
+  71   1          P5 |= 0x10U;
+  72   1      }
+  73          
+  74          unsigned int maintenance_runtime_on_falling_edge(unsigned int now_ms)
+  75          {
+  76   1          mrt_tick_t interval;
+  77   1      
+  78   1          if (state >= MRT_READY) return 0U;
+  79   1          interval = (mrt_tick_t)((mrt_tick_t)now_ms - last_edge_ms);
+  80   1          last_edge_ms = (mrt_tick_t)now_ms;
+  81   1          if (!have_edge) {
+  82   2              have_edge = 1U;
+  83   2              delay_ms = 1000U;
+  84   2              return 0U;
+  85   2          }
+  86   1          if (state == MRT_IDLE) {
+  87   2              if (interval >= 398U && interval <= 402U) {
+  88   3                  state = MRT_SYNC;
+  89   3                  bit_count = 0U;
+  90   3                  delay_ms = 35U;
+  91   3              } else {
+  92   3                  delay_ms = 1000U;
+  93   3                  if (interval >= 170U && interval <= 250U) return interval;
+  94   3              }
+  95   2              return 0U;
+  96   2          }
+  97   1          if (state == MRT_SYNC) {
+  98   2              if (interval < 30U || interval > 34U) goto invalid;
+  99   2              state = MRT_RECEIVE;
+ 100   2          } else {
+ 101   2              if (!((interval >= 6U && interval <= 10U) ||
+ 102   2                    (interval >= 12U && interval <= 16U))) goto invalid;
+ 103   2              frame[bit_count >> 3] = (unsigned char)((frame[bit_count >> 3] << 1) |
+ 104   2                                                     (interval >= 12U ? 1U : 0U));
+ 105   2              if (++bit_count == 24U) {
+ 106   3                  state = MRT_READY;
+ 107   3                  /* Allow the existing 9600-baud diagnostic line to finish. */
+ 108   3                  delay_ms = 250U;
+ 109   3                  return 0U;
+ 110   3              }
+ 111   2          }
+ 112   1          delay_ms = 17U;
+ 113   1          return 0U;
+ 114   1      invalid:
+ 115   1          state = MRT_IDLE;
+C51 COMPILER V9.54   MAINTENANCE_RUNTIME                                                   10/22/2026 14:17:11 PAGE 3   
+
+ 116   1          have_edge = 0U;
+ 117   1          delay_ms = 0U;
+ 118   1          return 0U;
+ 119   1      }
+ 120          
+ 121          unsigned char maintenance_runtime_poll(void)
+ 122          {
+ 123   1          if (state != MRT_READY) return MRT_COMMAND_NONE;
+ 124   1          if (!frame[0] || (frame[0] & 0x80U) || !frame[1] || frame_crc(2U) != frame[2]) {
+ 125   2              state = MRT_IDLE;
+ 126   2              have_edge = 0U;
+ 127   2              delay_ms = 0U;
+ 128   2              return MRT_COMMAND_NONE;
+ 129   2          }
+ 130   1          state = MRT_EXECUTING;
+ 131   1          return frame[0];
+ 132   1      }
+ 133          
+ 134          void maintenance_runtime_reply(unsigned char result, unsigned char status)
+ 135          {
+ 136   1          if (state != MRT_EXECUTING) return;
+ 137   1          frame[0] |= 0x80U;
+ 138   1          frame[2] = result;
+ 139   1          frame[3] = status;
+ 140   1          frame[4] = frame_crc(4U);
+ 141   1          bit_count = 0U;
+ 142   1          delay_ms = 100U;
+ 143   1          state = MRT_TX_WAIT;
+ 144   1      }
+ 145          
+ 146          void maintenance_runtime_tick(void)
+ 147          {
+ 148   1          if (delay_ms) {
+ 149   2              --delay_ms;
+ 150   2              if (delay_ms) return;
+ 151   2          }
+ 152   1          switch (state) {
+ 153   2          case MRT_IDLE:
+ 154   2              have_edge = 0U;
+ 155   2              break;
+ 156   2          case MRT_SYNC:
+ 157   2          case MRT_RECEIVE:
+ 158   2          case MRT_READY:
+ 159   2          case MRT_EXECUTING:
+ 160   2              state = MRT_IDLE;
+ 161   2              have_edge = 0U;
+ 162   2              break;
+ 163   2          case MRT_TX_WAIT:
+ 164   2              line_write(0U);
+ 165   2              state = MRT_TX_BREAK_LOW;
+ 166   2              delay_ms = 2U;
+ 167   2              break;
+ 168   2          case MRT_TX_BREAK_LOW:
+ 169   2              line_write(1U);
+ 170   2              state = MRT_TX_BREAK_HIGH;
+ 171   2              delay_ms = 398U;
+ 172   2              break;
+ 173   2          case MRT_TX_BREAK_HIGH:
+ 174   2              line_write(0U);
+ 175   2              state = MRT_TX_SYNC_LOW;
+ 176   2              delay_ms = 2U;
+ 177   2              break;
+C51 COMPILER V9.54   MAINTENANCE_RUNTIME                                                   10/22/2026 14:17:11 PAGE 4   
+
+ 178   2          case MRT_TX_SYNC_LOW:
+ 179   2              line_write(1U);
+ 180   2              state = MRT_TX_SYNC_HIGH;
+ 181   2              delay_ms = 30U;
+ 182   2              break;
+ 183   2          case MRT_TX_SYNC_HIGH:
+ 184   2              line_write(0U);
+ 185   2              state = MRT_TX_DATA_LOW;
+ 186   2              delay_ms = 2U;
+ 187   2              break;
+ 188   2          case MRT_TX_DATA_LOW:
+ 189   2              line_write(1U);
+ 190   2              if (bit_count == 40U) {
+ 191   3                  state = MRT_IDLE;
+ 192   3                  have_edge = 0U;
+ 193   3              } else {
+ 194   3                  delay_ms = (frame[bit_count >> 3] & (0x80U >> (bit_count & 7U))) ? 12U : 6U;
+ 195   3                  ++bit_count;
+ 196   3                  state = MRT_TX_DATA_HIGH;
+ 197   3              }
+ 198   2              break;
+ 199   2          case MRT_TX_DATA_HIGH:
+ 200   2              line_write(0U);
+ 201   2              state = MRT_TX_DATA_LOW;
+ 202   2              delay_ms = 2U;
+ 203   2              break;
+ 204   2          }
+ 205   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    654    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

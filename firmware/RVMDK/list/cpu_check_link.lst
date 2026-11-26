@@ -1,0 +1,291 @@
+C51 COMPILER V9.54   CPU_CHECK_LINK                                                        11/26/2026 11:23:14 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CPU_CHECK_LINK
+OBJECT MODULE PLACED IN .\list\cpu_check_link.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Driver\src\cpu_check_link.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;.
+                    -.\Driver\inc) DEBUG OBJECTEXTEND PRINT(.\list\cpu_check_link.lst) TABS(2) OBJECT(.\list\cpu_check_link.obj)
+
+line level    source
+
+   1          #include "cpu_check_link.h"
+   2          
+   3          #ifdef CPU_CHECK_LINK_HOST_TEST
+              #include <stdint.h>
+              typedef uint16_t link_tick_t;
+              extern unsigned char P5, P5M0, P5M1;
+              #else
+   8          #include "Config.h"
+   9          /* C51 的 unsigned int 为 16 位；所有间隔按 16 位无符号差值计算。 */
+  10          typedef unsigned int link_tick_t;
+  11          #endif
+  12          
+  13          #define LINK_LINE_MASK 0x10U /* P5.4 / CPU_CHECK */
+  14          #define LINK_REQUEST_BYTES 3U
+  15          #define LINK_REPLY_BYTES 3U
+  16          
+  17          /* 协议下降沿间隔与 Linux 端 stc_watchdog_protocol.h 的对应常量一致。 */
+  18          #define LINK_BREAK_MS 130U
+  19          #define LINK_SYNC_MS 100U
+  20          #define LINK_ZERO_MS 40U
+  21          #define LINK_ONE_MS 70U
+  22          #define LINK_TOLERANCE_MS 10U
+  23          /* 主机心跳 100 ms 翻转，下降沿名义间隔 200 ms。 */
+  24          #define LINK_HEARTBEAT_MIN_MS 170U
+  25          #define LINK_HEARTBEAT_MAX_MS 250U
+  26          
+  27          /* 帧内等待下一沿的期限：最大合法间隔 + 1 ms 量化余量。 */
+  28          #define LINK_SYNC_TIMEOUT_MS (LINK_SYNC_MS + LINK_TOLERANCE_MS + 1U)
+  29          #define LINK_BIT_TIMEOUT_MS (LINK_ONE_MS + LINK_TOLERANCE_MS + 1U)
+  30          /* 空闲超过 1 s 未见下降沿则丢弃上一沿，避免很久之后的沿被当成心跳或前导�
+             -� */
+  31          #define LINK_IDLE_TIMEOUT_MS 1000U
+  32          /*
+  33           * 主循环取走完整请求的期限。最坏阻塞来自 9600 baud 同步日志：
+  34           * 最长 app_report 140 字符 + "AP_RESET release\r\n" 18 字符，约 165 ms。
+  35           * 主机接收上限 2500 ms 依赖本期限，不能取消，也不能随意加大。
+  36           */
+  37          #define LINK_HANDOFF_MS 250U
+  38          /*
+  39           * poll 到 reply 之间只执行命令并取样状态（最长为 STOP 的释放日志约 19 ms）。
+  40           * 独立计时，不继承 READY 剩余时间，正确性不依赖日志长度。
+  41           */
+  42          #define LINK_EXECUTE_MS 100U
+  43          /* 应答准备好后等待主机切换为输入，对应主机 STC_WDT_TURNAROUND_MS。 */
+  44          #define LINK_TURNAROUND_MS 100U
+  45          /* Same 20 ms active-low pulses in both directions. */
+  46          #define LINK_REPLY_LOW_MS 20U
+  47          
+  48          #define LINK_IDLE 0U
+  49          #define LINK_SYNC 1U
+  50          #define LINK_RECEIVE 2U
+  51          /* 以下状态期间忽略输入边沿，自身应答不会被当成心跳。 */
+  52          #define LINK_READY 3U
+  53          #define LINK_EXECUTING 4U
+C51 COMPILER V9.54   CPU_CHECK_LINK                                                        11/26/2026 11:23:14 PAGE 2   
+
+  54          #define LINK_TX_WAIT 5U
+  55          #define LINK_TX_BREAK_LOW 6U
+  56          #define LINK_TX_BREAK_HIGH 7U
+  57          #define LINK_TX_SYNC_LOW 8U
+  58          #define LINK_TX_SYNC_HIGH 9U
+  59          #define LINK_TX_DATA_LOW 10U
+  60          #define LINK_TX_DATA_HIGH 11U
+  61          
+  62          /* 请求与应答复用同一缓冲区，节省 SMALL 模式 DATA。 */
+  63          static volatile unsigned char frame[LINK_REPLY_BYTES];
+  64          static volatile unsigned char state;
+  65          static volatile unsigned char bit_count;
+  66          static volatile unsigned char have_edge;
+  67          static volatile link_tick_t last_edge_ms;
+  68          /* Timer0 每 1 ms 递减；减到 0 时执行当前状态的到期动作。 */
+  69          static volatile link_tick_t delay_ms;
+  70          /* 仅 Timer0 调用：高电平=高阻释放（依赖外部上拉），低电平=开漏拉低。 */
+  71          static void line_write(unsigned char high)
+  72          {
+  73   1          if (high) {
+  74   2              P5M1 |= LINK_LINE_MASK;
+  75   2              P5M0 &= (unsigned char)~LINK_LINE_MASK;
+  76   2              P5 |= LINK_LINE_MASK;
+  77   2          } else {
+  78   2              P5 &= (unsigned char)~LINK_LINE_MASK;
+  79   2              P5M1 |= LINK_LINE_MASK;
+  80   2              P5M0 |= LINK_LINE_MASK;
+  81   2          }
+  82   1      }
+  83          
+  84          /* CRC-8：poly 0x07，init 0，无反射，无末尾异或。 */
+  85          static unsigned char frame_crc(unsigned char size)
+  86          {
+  87   1          unsigned char crc = 0U;
+  88   1          unsigned char index;
+  89   1          unsigned char shift;
+  90   1      
+  91   1          for (index = 0U; index < size; ++index) {
+  92   2              crc ^= frame[index];
+  93   2              for (shift = 0U; shift < 8U; ++shift) {
+  94   3                  if (crc & 0x80U) crc = (unsigned char)((crc << 1) ^ 0x07U);
+  95   3                  else crc = (unsigned char)(crc << 1);
+  96   3              }
+  97   2          }
+  98   1          return crc;
+  99   1      }
+ 100          
+ 101          void cpu_check_link_init(void)
+ 102          {
+ 103   1          state = LINK_IDLE;
+ 104   1          bit_count = 0U;
+ 105   1          have_edge = 0U;
+ 106   1          last_edge_ms = 0U;
+ 107   1          delay_ms = 0U;
+ 108   1          /* 高阻输入，线路由外部上拉保持高电平。 */
+ 109   1          P5M1 |= LINK_LINE_MASK;
+ 110   1          P5M0 &= (unsigned char)~LINK_LINE_MASK;
+ 111   1          P5 |= LINK_LINE_MASK;
+ 112   1      }
+ 113          
+ 114          /*
+ 115           * 普通心跳由后一沿确认：只有与上一沿间隔落在心跳窗口内，才返回上一沿
+C51 COMPILER V9.54   CPU_CHECK_LINK                                                        11/26/2026 11:23:14 PAGE 3   
+
+ 116           * 距今的时间。前导首沿之后紧跟 130 ms 间隔进入 SYNC，因此不会被记为心跳。
+ 117           */
+ 118          unsigned int cpu_check_link_on_falling_edge(unsigned int now_ms)
+ 119          {
+ 120   1          link_tick_t interval;
+ 121   1      
+ 122   1          if (state >= LINK_READY) return 0U;
+ 123   1          interval = (link_tick_t)((link_tick_t)now_ms - last_edge_ms);
+ 124   1          last_edge_ms = (link_tick_t)now_ms;
+ 125   1          if (!have_edge) {
+ 126   2              have_edge = 1U;
+ 127   2              delay_ms = LINK_IDLE_TIMEOUT_MS;
+ 128   2              return 0U;
+ 129   2          }
+ 130   1          if (state == LINK_IDLE) {
+ 131   2              if (interval >= LINK_BREAK_MS - LINK_TOLERANCE_MS &&
+ 132   2                  interval <= LINK_BREAK_MS + LINK_TOLERANCE_MS) {
+ 133   3                  state = LINK_SYNC;
+ 134   3                  bit_count = 0U;
+ 135   3                  delay_ms = LINK_SYNC_TIMEOUT_MS;
+ 136   3              } else {
+ 137   3                  delay_ms = LINK_IDLE_TIMEOUT_MS;
+ 138   3                  if (interval >= LINK_HEARTBEAT_MIN_MS && interval <= LINK_HEARTBEAT_MAX_MS)
+ 139   3                      return interval;
+ 140   3              }
+ 141   2              return 0U;
+ 142   2          }
+ 143   1          if (state == LINK_SYNC) {
+ 144   2              if (interval < LINK_SYNC_MS - LINK_TOLERANCE_MS ||
+ 145   2                  interval > LINK_SYNC_MS + LINK_TOLERANCE_MS) goto invalid;
+ 146   2              state = LINK_RECEIVE;
+ 147   2          } else {
+ 148   2              if (!((interval >= LINK_ZERO_MS - LINK_TOLERANCE_MS &&
+ 149   2                     interval <= LINK_ZERO_MS + LINK_TOLERANCE_MS) ||
+ 150   2                    (interval >= LINK_ONE_MS - LINK_TOLERANCE_MS &&
+ 151   2                     interval <= LINK_ONE_MS + LINK_TOLERANCE_MS))) goto invalid;
+ 152   2              /* 高位先收；间隔不小于位 1 下限即为 1。 */
+ 153   2              frame[bit_count >> 3] = (unsigned char)((frame[bit_count >> 3] << 1) |
+ 154   2                  (interval >= LINK_ONE_MS - LINK_TOLERANCE_MS ? 1U : 0U));
+ 155   2              if (++bit_count == LINK_REQUEST_BYTES * 8U) {
+ 156   3                  state = LINK_READY;
+ 157   3                  delay_ms = LINK_HANDOFF_MS;
+ 158   3                  return 0U;
+ 159   3              }
+ 160   2          }
+ 161   1          delay_ms = LINK_BIT_TIMEOUT_MS;
+ 162   1          return 0U;
+ 163   1      invalid:
+ 164   1          state = LINK_IDLE;
+ 165   1          have_edge = 0U;
+ 166   1          delay_ms = 0U;
+ 167   1          return 0U;
+ 168   1      }
+ 169          
+ 170          /* 请求：命令、非零序号、CRC。校验失败直接丢弃，不应答。 */
+ 171          unsigned char cpu_check_link_poll(void)
+ 172          {
+ 173   1          if (state != LINK_READY) return LINK_COMMAND_NONE;
+ 174   1          if (frame[0] < LINK_COMMAND_START || frame[0] > LINK_COMMAND_READ || !frame[1] ||
+ 175   1              frame_crc(LINK_REQUEST_BYTES - 1U) != frame[2]) {
+ 176   2              state = LINK_IDLE;
+ 177   2              have_edge = 0U;
+C51 COMPILER V9.54   CPU_CHECK_LINK                                                        11/26/2026 11:23:14 PAGE 4   
+
+ 178   2              delay_ms = 0U;
+ 179   2              return LINK_COMMAND_NONE;
+ 180   2          }
+ 181   1          state = LINK_EXECUTING;
+ 182   1          delay_ms = LINK_EXECUTE_MS;
+ 183   1          return frame[0];
+ 184   1      }
+ 185          
+ 186          /* 应答：命令/拒绝/状态、原序号、CRC。期限已过的事务不再应答。 */
+ 187          void cpu_check_link_reply(unsigned char result, unsigned char status)
+ 188          {
+ 189   1          if (state != LINK_EXECUTING) return;
+ 190   1          frame[0] = (unsigned char)((frame[0] << 6) | (result ? 0x20U : 0U) | (status & 0x1fU));
+ 191   1          frame[2] = frame_crc(LINK_REPLY_BYTES - 1U);
+ 192   1          bit_count = 0U;
+ 193   1          delay_ms = LINK_TURNAROUND_MS;
+ 194   1          state = LINK_TX_WAIT;
+ 195   1      }
+ 196          
+ 197          /* 每个下降沿后保持低电平 LINK_REPLY_LOW_MS，再释放到下一沿。 */
+ 198          void cpu_check_link_tick(void)
+ 199          {
+ 200   1          if (delay_ms) {
+ 201   2              --delay_ms;
+ 202   2              if (delay_ms) return;
+ 203   2          }
+ 204   1          switch (state) {
+ 205   2          case LINK_IDLE:
+ 206   2              have_edge = 0U;
+ 207   2              break;
+ 208   2          case LINK_SYNC:
+ 209   2          case LINK_RECEIVE:
+ 210   2          case LINK_READY:
+ 211   2          case LINK_EXECUTING:
+ 212   2              state = LINK_IDLE;
+ 213   2              have_edge = 0U;
+ 214   2              break;
+ 215   2          case LINK_TX_WAIT:
+ 216   2              line_write(0U);
+ 217   2              state = LINK_TX_BREAK_LOW;
+ 218   2              delay_ms = LINK_REPLY_LOW_MS;
+ 219   2              break;
+ 220   2          case LINK_TX_BREAK_LOW:
+ 221   2              line_write(1U);
+ 222   2              state = LINK_TX_BREAK_HIGH;
+ 223   2              delay_ms = LINK_BREAK_MS - LINK_REPLY_LOW_MS;
+ 224   2              break;
+ 225   2          case LINK_TX_BREAK_HIGH:
+ 226   2              line_write(0U);
+ 227   2              state = LINK_TX_SYNC_LOW;
+ 228   2              delay_ms = LINK_REPLY_LOW_MS;
+ 229   2              break;
+ 230   2          case LINK_TX_SYNC_LOW:
+ 231   2              line_write(1U);
+ 232   2              state = LINK_TX_SYNC_HIGH;
+ 233   2              delay_ms = LINK_SYNC_MS - LINK_REPLY_LOW_MS;
+ 234   2              break;
+ 235   2          case LINK_TX_SYNC_HIGH:
+ 236   2              line_write(0U);
+ 237   2              state = LINK_TX_DATA_LOW;
+ 238   2              delay_ms = LINK_REPLY_LOW_MS;
+ 239   2              break;
+C51 COMPILER V9.54   CPU_CHECK_LINK                                                        11/26/2026 11:23:14 PAGE 5   
+
+ 240   2          case LINK_TX_DATA_LOW:
+ 241   2              line_write(1U);
+ 242   2              if (bit_count == LINK_REPLY_BYTES * 8U) {
+ 243   3                  state = LINK_IDLE;
+ 244   3                  have_edge = 0U;
+ 245   3              } else {
+ 246   3                  delay_ms = (frame[bit_count >> 3] & (0x80U >> (bit_count & 7U))) ?
+ 247   3                             LINK_ONE_MS - LINK_REPLY_LOW_MS : LINK_ZERO_MS - LINK_REPLY_LOW_MS;
+ 248   3                  ++bit_count;
+ 249   3                  state = LINK_TX_DATA_HIGH;
+ 250   3              }
+ 251   2              break;
+ 252   2          case LINK_TX_DATA_HIGH:
+ 253   2              line_write(0U);
+ 254   2              state = LINK_TX_DATA_LOW;
+ 255   2              delay_ms = LINK_REPLY_LOW_MS;
+ 256   2              break;
+ 257   2          }
+ 258   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    684    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

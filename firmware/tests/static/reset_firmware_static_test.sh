@@ -37,11 +37,11 @@ require(target.findtext("./TargetOption/Target51/Target51Misc/MemoryModel") ==
         "0", "正式工程必须保持 SMALL/DATA 模式")
 expected = {root / name for name in (
     "User/main.c", "Driver/src/heartbeat_monitor.c", "Driver/src/uart.c",
-    "Driver/src/reset_controller.c", "Driver/src/cpu_check_link.c")}
+    "Driver/src/reset_controller.c", "Driver/src/cpu_check_link.c", "Driver/src/boot_facts.c")}
 files = target.findall("./Groups/Group/Files/File")
 paths = [local_path(project.parent, node.findtext("FilePath", "")) for node in files]
-require(len(paths) == 5 and set(paths) == expected,
-        "正式工程必须只编入五个本工程源码（无历史验证/跨工程源码）")
+require(len(paths) == 6 and set(paths) == expected,
+        "正式工程必须只编入六个本工程源码（无历史验证/跨工程源码）")
 require(all(node.findtext("FileType") == "1" for node in files),
         "正式源码必须作为 C 文件编译")
 require(all(node.findtext(".//IncludeInBuild", "1") == "1" for node in files),
@@ -92,7 +92,7 @@ for path in paths:
         ["-I" + str(directory) for directory in include_dirs] + [str(path)], text=True)
     require(not re.search(r"\b(?:xdata|idata)\b", active[path.name]),
             path.name + " 不得改为 XDATA/IDATA 生产路径")
-print("OK: 独立五源码工程、SMALL/DATA、无生产 xdata/idata")
+print("OK: 独立六源码工程、SMALL/DATA、无生产 xdata/idata")
 
 config = source[root / "User/Config.h"]
 macros = dict(re.findall(r'^\s*#\s*define\s+(\w+)\s+([^\n]+)', config, re.M))
@@ -113,7 +113,7 @@ require(re.search(r"protocol=short-frame\s+3/5\s+bytes", source[root / "User/mai
 header = source[root / "Driver/inc/cpu_check_link.h"]
 api = set(re.findall(r'\b(cpu_check_link_\w+)\s*\([^;{}]*\)\s*;', header))
 require(api == {"cpu_check_link_" + name for name in (
-    "init", "tick", "on_falling_edge", "poll", "reply")},
+    "init", "tick", "on_falling_edge", "poll", "reply", "argument")},
     "链路接口必须是当前短帧 API，不得恢复旧事件/维护模式接口")
 require(not re.search(r'\bHEARTBEAT_MONITOR_GRACE_MS\b', config), "不得保留未使用的宽限配置")
 main_source = active["main.c"]

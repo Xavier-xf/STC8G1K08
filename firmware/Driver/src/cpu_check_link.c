@@ -12,15 +12,14 @@ typedef unsigned int link_tick_t;
 
 #define LINK_LINE_MASK 0x10U /* P5.4 / CPU_CHECK */
 #define LINK_REQUEST_BYTES 3U
-#define LINK_REPLY_BYTES 5U
-#define LINK_REPLY_FLAG 0x80U
+#define LINK_REPLY_BYTES 3U
 
 /* 协议下降沿间隔与 Linux 端 stc_watchdog_protocol.h 的对应常量一致。 */
-#define LINK_BREAK_MS 400U
-#define LINK_SYNC_MS 32U
-#define LINK_ZERO_MS 8U
-#define LINK_ONE_MS 14U
-#define LINK_TOLERANCE_MS 2U
+#define LINK_BREAK_MS 130U
+#define LINK_SYNC_MS 100U
+#define LINK_ZERO_MS 40U
+#define LINK_ONE_MS 70U
+#define LINK_TOLERANCE_MS 10U
 /* 主机心跳 100 ms 翻转，下降沿名义间隔 200 ms。 */
 #define LINK_HEARTBEAT_MIN_MS 170U
 #define LINK_HEARTBEAT_MAX_MS 250U
@@ -33,7 +32,7 @@ typedef unsigned int link_tick_t;
 /*
  * 主循环取走完整请求的期限。最坏阻塞来自 9600 baud 同步日志：
  * 最长 app_report 140 字符 + "AP_RESET release\r\n" 18 字符，约 165 ms。
- * 主机接收上限 1700 ms 依赖本期限，不能取消，也不能随意加大。
+ * 主机接收上限 2500 ms 依赖本期限，不能取消，也不能随意加大。
  */
 #define LINK_HANDOFF_MS 250U
 /*
@@ -43,12 +42,8 @@ typedef unsigned int link_tick_t;
 #define LINK_EXECUTE_MS 100U
 /* 应答准备好后等待主机切换为输入，对应主机 STC_WDT_TURNAROUND_MS。 */
 #define LINK_TURNAROUND_MS 100U
-/*
- * 应答低脉宽（请求方向仍为 2 ms）。Tina 4.9 gpiolib 在中断线程中读取电平，
- * 线程运行时线已回高则丢弃下降沿事件；4 ms 给线程留出余量。双方只按下降沿
- * 间隔解码，脉宽不改变帧格式；最短 8 ms 位间隔仍保留 4 ms 高电平。
- */
-#define LINK_REPLY_LOW_MS 4U
+/* Same 20 ms active-low pulses in both directions. */
+#define LINK_REPLY_LOW_MS 20U
 
 #define LINK_IDLE 0U
 #define LINK_SYNC 1U
@@ -118,7 +113,7 @@ void cpu_check_link_init(void)
 
 /*
  * 普通心跳由后一沿确认：只有与上一沿间隔落在心跳窗口内，才返回上一沿
- * 距今的时间。前导首沿之后紧跟 400 ms 间隔进入 SYNC，因此不会被记为心跳。
+ * 距今的时间。前导首沿之后紧跟 130 ms 间隔进入 SYNC，因此不会被记为心跳。
  */
 unsigned int cpu_check_link_on_falling_edge(unsigned int now_ms)
 {
@@ -176,7 +171,7 @@ invalid:
 unsigned char cpu_check_link_poll(void)
 {
     if (state != LINK_READY) return LINK_COMMAND_NONE;
-    if (!frame[0] || (frame[0] & LINK_REPLY_FLAG) || !frame[1] ||
+    if (frame[0] < LINK_COMMAND_START || frame[0] > LINK_COMMAND_READ || !frame[1] ||
         frame_crc(LINK_REQUEST_BYTES - 1U) != frame[2]) {
         state = LINK_IDLE;
         have_edge = 0U;
@@ -188,14 +183,12 @@ unsigned char cpu_check_link_poll(void)
     return frame[0];
 }
 
-/* 应答：命令|0x80、原序号、结果、状态、CRC。期限已过的事务不再应答。 */
+/* 应答：命令/拒绝/状态、原序号、CRC。期限已过的事务不再应答。 */
 void cpu_check_link_reply(unsigned char result, unsigned char status)
 {
     if (state != LINK_EXECUTING) return;
-    frame[0] |= LINK_REPLY_FLAG;
-    frame[2] = result;
-    frame[3] = status;
-    frame[4] = frame_crc(LINK_REPLY_BYTES - 1U);
+    frame[0] = (unsigned char)((frame[0] << 6) | (result ? 0x20U : 0U) | (status & 0x1fU));
+    frame[2] = frame_crc(LINK_REPLY_BYTES - 1U);
     bit_count = 0U;
     delay_ms = LINK_TURNAROUND_MS;
     state = LINK_TX_WAIT;

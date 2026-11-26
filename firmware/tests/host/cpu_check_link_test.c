@@ -6,11 +6,11 @@
 
 unsigned char P5, P5M0, P5M1;
 static uint32_t clock_ms;
-static uint32_t falling_edges[43];
+static uint32_t falling_edges[27];
 static unsigned int edge_count;
 static unsigned int accepted_heartbeats;
-/* Reply pulses stay low 4 ms so Tina 4.9 gpiolib samples the level before release. */
-#define REPLY_LOW_MS 4U
+/* Reply pulses stay low 20 ms so Tina 4.9 gpiolib samples the level before release. */
+#define REPLY_LOW_MS 20U
 static uint32_t low_started_ms;
 static unsigned int low_pulses;
 
@@ -87,17 +87,17 @@ static void request(unsigned char command, unsigned char sequence, int corrupt)
     bytes[2] = crc8(bytes, 2);
     if (corrupt) bytes[2] ^= 1U;
     (void)host_edge(20);
-    assert(host_edge(400) == 0);
-    assert(host_edge(32) == 0);
+    assert(host_edge(130) == 0);
+    assert(host_edge(100) == 0);
     for (i = 0; i < sizeof(bytes); ++i)
         for (shift = 0; shift < 8; ++shift)
-            assert(host_edge((bytes[i] & (0x80U >> shift)) ? 14 : 8) == 0);
+            assert(host_edge((bytes[i] & (0x80U >> shift)) ? 70 : 40) == 0);
 }
 
 static void expect_reply(unsigned char command, unsigned char sequence,
                          unsigned char result, unsigned char status)
 {
-    unsigned char decoded[5] = {0};
+    unsigned char decoded[3] = {0};
     unsigned int i;
     uint32_t start = clock_ms;
     edge_count = 0;
@@ -106,19 +106,18 @@ static void expect_reply(unsigned char command, unsigned char sequence,
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
     advance(99);
     assert(edge_count == 0);
-    advance(1500);
-    assert(edge_count == 43 && low_pulses == 43 && line_high());
+    advance(2100);
+    assert(edge_count == 27 && low_pulses == 27 && line_high());
     assert(falling_edges[0] - start == 100);
-    assert(falling_edges[1] - falling_edges[0] == 400);
-    assert(falling_edges[2] - falling_edges[1] == 32);
-    for (i = 0; i < 40; ++i) {
+    assert(falling_edges[1] - falling_edges[0] == 130);
+    assert(falling_edges[2] - falling_edges[1] == 100);
+    for (i = 0; i < 24; ++i) {
         uint32_t interval = falling_edges[i + 3] - falling_edges[i + 2];
-        assert(interval == 8 || interval == 14);
-        decoded[i / 8] = (unsigned char)((decoded[i / 8] << 1) | (interval == 14));
+        assert(interval == 40 || interval == 70);
+        decoded[i / 8] = (unsigned char)((decoded[i / 8] << 1) | (interval == 70));
     }
-    assert(decoded[0] == (command | 0x80U) && decoded[1] == sequence);
-    assert(decoded[2] == result && decoded[3] == status);
-    assert(decoded[4] == crc8(decoded, 4));
+    assert(decoded[0] == ((command << 6) | (result << 5) | status) && decoded[1] == sequence);
+    assert(decoded[2] == crc8(decoded, 2));
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
 }
 
@@ -139,11 +138,7 @@ int main(void)
 
     setup(0);
     request(42, 1, 0);
-    assert(cpu_check_link_poll() == 42);
-    expect_reply(42, 1, LINK_RESULT_INVALID, 0);
-    request(42, 1, 0);
-    assert(cpu_check_link_poll() == 42);
-    expect_reply(42, 1, LINK_RESULT_INVALID, 0);
+    assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
 
     setup(0);
     request(LINK_COMMAND_STOP, 1, 1);
@@ -165,7 +160,7 @@ int main(void)
     advance(250);
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
     advance(1600);
-    assert(edge_count == 43);
+    assert(edge_count == 27);
 
     /* EXECUTING has its own deadline; it does not inherit READY's remainder. */
     setup(0);
@@ -184,16 +179,16 @@ int main(void)
 
     setup(0);
     assert(host_edge(0) == 0);
-    assert(host_edge(400) == 0);
-    advance(35);
+    assert(host_edge(130) == 0);
+    advance(111);
     assert(host_edge(200) == 0);
     assert(host_edge(200) == 200);
     setup(0);
     (void)host_edge(0);
-    (void)host_edge(400);
-    (void)host_edge(32);
-    (void)host_edge(8);
-    advance(17);
+    (void)host_edge(130);
+    (void)host_edge(100);
+    (void)host_edge(40);
+    advance(81);
     assert(cpu_check_link_poll() == LINK_COMMAND_NONE);
     request(LINK_COMMAND_READ, 3, 0);
     assert(cpu_check_link_poll() == LINK_COMMAND_READ);
@@ -210,6 +205,6 @@ int main(void)
     assert(accepted_heartbeats == 2);
     advance(65536);
     assert(host_edge(200) == 0);
-    puts("PASS: 3-byte requests, 5-byte replies, CRC, NAK, time wrap, bounded handoff, partial frames and heartbeat isolation");
+    puts("PASS: 3-byte requests, 3-byte replies, CRC, unsupported command, time wrap, bounded handoff, partial frames and heartbeat isolation");
     return 0;
 }
